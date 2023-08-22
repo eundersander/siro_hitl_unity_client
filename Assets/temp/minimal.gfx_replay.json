@@ -1,0 +1,119 @@
+{
+  "keyframes": [
+    {
+      "loads": [
+        {
+          "type": 1,
+          "filepath": "data/fpss/stages/106879104_174887235.glb",
+          "frame": {
+            "up": [
+              0.0,
+              1.0,
+              0.0
+            ],
+            "front": [
+              0.0,
+              0.0,
+              -1.0
+            ],
+            "origin": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "virtualUnitToMeters": 1.0,
+          "forceFlatShading": false,
+          "splitInstanceMesh": true,
+          "shaderTypeToUse": "material",
+          "hasSemanticTextures": false
+        },
+        {
+          "type": 0,
+          "filepath": "data/fpss/stages/106879104_174887235_missing.glb",
+          "frame": {
+            "up": [
+              0.0,
+              1.0,
+              0.0
+            ],
+            "front": [
+              0.0,
+              0.0,
+              -1.0
+            ],
+            "origin": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "virtualUnitToMeters": 1.0,
+          "forceFlatShading": false,
+          "splitInstanceMesh": true,
+          "shaderTypeToUse": "material",
+          "hasSemanticTextures": false
+        }
+      ],
+      "creations": [
+        {
+          "instanceKey": 0,
+          "creation": {
+            "filepath": "data/fpss/stages/106879104_174887235.glb"
+          }
+        },
+        {
+          "instanceKey": 1,
+          "creation": {
+            "filepath": "data/fpss/stages/106879104_174887235_missing.glb",
+            "scale": [
+              1.0,
+              2.0,
+              3.0
+            ]
+          }
+        }
+      ],
+      "stateUpdates": [
+        {
+          "instanceKey": 0,
+          "state": {
+            "absTransform": {
+              "translation": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "rotation": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+              ]
+            },
+            "semanticId": 0
+          }
+        },
+        {
+          "instanceKey": 1,
+          "state": {
+            "absTransform": {
+              "translation": [
+                2.2465872764587404,
+                1.0684746503829957,
+                1.519477128982544
+              ],
+              "rotation": [
+                0.999979555606842,
+                0.0,
+                -0.006393900141119957,
+                0.0
+              ]
+            },
+            "semanticId": 100
+          }
+        }
+      ]
+    }
+  ]
+}
