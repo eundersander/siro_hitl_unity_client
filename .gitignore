@@ -17,6 +17,9 @@
 /Assets/Resources/data
 /Assets/Resources/data.meta
 
+# Mac thumbnail file?
+/Assets/.DS_Store
+
 # Visual Studio file; I'm not sure if we should ignore or track this
 .vsconfig
 
