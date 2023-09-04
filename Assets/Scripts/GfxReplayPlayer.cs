@@ -6,27 +6,11 @@ using UnityEngine.InputSystem;
 
 public class GfxReplayPlayer : MonoBehaviour
 {
-    [SerializeField]
-    private TextAsset jsonFile; // Drag your JSON file onto this field in the inspector
 
     private Dictionary<int, GameObject> _instanceDictionary = new Dictionary<int, GameObject>();
     private Dictionary<string, Load> _loadDictionary = new Dictionary<string, Load>();
-    private int _nextKeyframeIdx = 0;
 
     private Quaternion _defaultRotation = Quaternion.Euler(0, 180, 0); //  Quaternion.Euler(0, 180, 0);
-    private ReplayData _replayData;
-
-    // todo: better assert that is visible on device
-    public static void Assert(bool condition, string message = "Assertion failed!")
-    {
-        if (!condition)
-        {
-            Debug.LogError(message);
-#if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;  // Stops the play mode in the editor
-#endif
-        }
-    }
 
     // simplify "path/abc/../to/file" to "path/to/file"
     static string SimplifyRelativePath(string path)
@@ -54,7 +38,7 @@ public class GfxReplayPlayer : MonoBehaviour
         return SimplifyRelativePath(sourceFilepath).Replace(".glb", "");
     }
 
-    public GameObject HandleFrame(GameObject node, Frame frame)
+    GameObject HandleFrame(GameObject node, Frame frame)
     {
         if (frame.up[0] == 0 && frame.up[1] == 1 && frame.up[2] == 0)
         {
@@ -79,7 +63,7 @@ public class GfxReplayPlayer : MonoBehaviour
         }
     }
 
-    void ProcessKeyframe(KeyframeData keyframe)
+    public void ProcessKeyframe(KeyframeData keyframe)
     {
         // Handle Loads
         if (keyframe.loads != null)
@@ -122,6 +106,7 @@ public class GfxReplayPlayer : MonoBehaviour
 
                 _instanceDictionary[creationItem.instanceKey] = instance;
             }
+            Debug.Log($"Processed {keyframe.creations.Length} creations!");
         }
 
         // Handle State Updates
@@ -136,20 +121,23 @@ public class GfxReplayPlayer : MonoBehaviour
                     // Note various negations to adjust handedness and coordinate
                     // convention.
                     // Extract translation and rotation from the update state
-                    Vector3 translation = new Vector3(
-                        update.state.absTransform.translation[0],
-                        update.state.absTransform.translation[1],
-                        -update.state.absTransform.translation[2]
-                    );
+                    //Vector3 translation = new Vector3(
+                    //    update.state.absTransform.translation[0],
+                    //    update.state.absTransform.translation[1],
+                    //    -update.state.absTransform.translation[2]
+                    //);
 
-                    Quaternion rotation = new Quaternion(
-                        update.state.absTransform.rotation[1],
-                        -update.state.absTransform.rotation[2],
-                        -update.state.absTransform.rotation[3],
-                        update.state.absTransform.rotation[0]
-                    );
+                    Vector3 translation = CoordinateConventionHelper.ToUnityVector(update.state.absTransform.translation);
 
-                    rotation = _defaultRotation * rotation;
+                    //Quaternion rotation = new Quaternion(
+                    //    update.state.absTransform.rotation[1],
+                    //    -update.state.absTransform.rotation[2],
+                    //    -update.state.absTransform.rotation[3],
+                    //    update.state.absTransform.rotation[0]
+                    //);
+                    // rotation = _defaultRotation * rotation;
+                    Quaternion rotation = CoordinateConventionHelper.ToUnityQuaternion(update.state.absTransform.rotation);
+
 
                     instance.transform.position = translation;
                     instance.transform.rotation = rotation;
@@ -160,109 +148,28 @@ public class GfxReplayPlayer : MonoBehaviour
                 }
             }
         }
-    }
 
-    void Start()
-    {
-        if (jsonFile == null)
+        if (keyframe.deletions != null)
         {
-            Debug.LogError("No JSON file provided.");
-            return;
-        }
-
-        _replayData = JsonUtility.FromJson<ReplayData>(jsonFile.text);
-
-        Assert(_replayData.keyframes.Length > 0);
-        _nextKeyframeIdx = 0;
-        NextKeyframe();
-    }
-
-    private void NextKeyframe()
-    {
-        if (_nextKeyframeIdx >= _replayData.keyframes.Length)
-        {
-            return;
-        }
-        ProcessKeyframe(_replayData.keyframes[_nextKeyframeIdx]);
-        Debug.Log($"processed keyframe {_nextKeyframeIdx}");
-        _nextKeyframeIdx++;
-    }
-
-    void Update()
-    {
-        if (Keyboard.current.spaceKey.wasPressedThisFrame)
-        {
-            NextKeyframe();
-        }
-    }
-
-    [Serializable]
-    private class ReplayData
-    {
-        public KeyframeData[] keyframes;
-    }
-
-    [Serializable]
-    private class KeyframeData
-    {
-        public Load[] loads;
-        public CreationItem[] creations;
-        public StateUpdate[] stateUpdates;
-    }
-
-    [Serializable]
-    public class Load
-    {
-        public int type;
-        public string filepath;
-        public Frame frame;
-        // public float virtualUnitToMeters;
-        // public bool forceFlatShading;
-        // public bool splitInstanceMesh;
-        // public string shaderTypeToUse;
-        // public bool hasSemanticTextures;
-    }
-
-    [Serializable]
-    public class Frame
-    {
-        public float[] up;
-        public float[] front;
-        public float[] origin;
-    }
-
-    [Serializable]
-    public class CreationItem
-    {
-        public int instanceKey;
-        public Creation creation;
-    }
-
-    [Serializable]
-    public class Creation
-    {
-        public string filepath;
-        public float[] scale;
-    }
-
-    [Serializable]
-    public class StateUpdate
-    {
-        public int instanceKey;
-        public StateData state;
-
-        [Serializable]
-        public class StateData
-        {
-            public AbsTransform absTransform;
-            public int semanticId;
-
-            [Serializable]
-            public class AbsTransform
+            foreach (var key in keyframe.deletions)
             {
-                public List<float> translation;
-                public List<float> rotation;
+                if (_instanceDictionary.ContainsKey(key))
+                {
+                    Destroy(_instanceDictionary[key]);
+                    _instanceDictionary.Remove(key);
+                }
             }
+            Debug.Log($"Processed {keyframe.deletions.Length} deletions!");
         }
+    }
+
+    public void DeleteAllInstancesFromKeyframes()
+    {
+        foreach (var kvp in _instanceDictionary)
+        {
+            Destroy(kvp.Value);
+        }
+        Debug.Log($"Deleted all {_instanceDictionary.Count} instances!");
+        _instanceDictionary.Clear();
     }
 }
