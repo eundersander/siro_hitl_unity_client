@@ -17,11 +17,18 @@
 /Assets/Resources/data
 /Assets/Resources/data.meta
 
-# Mac thumbnail file?
-/Assets/.DS_Store
+# Mac OS file
+.DS_Store
 
-# Visual Studio file; I'm not sure if we should ignore or track this
+# Visual Studio files; I'm not sure if we should ignore or track these
 .vsconfig
+.vscode
+
+# some kind of crash dump file
+/mono_crash*
+
+# I think I accidentally installed this version of Unity in the root of my project folder, so let's ignore it
+2022.3.7f1
 
 # MemoryCaptures can get excessive in size.
 # They also could contain extremely sensitive data
