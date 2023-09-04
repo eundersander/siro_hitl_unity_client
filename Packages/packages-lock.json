@@ -1,5 +1,12 @@
 {
   "dependencies": {
+    "com.endel.nativewebsocket": {
+      "version": "https://github.com/endel/NativeWebSocket.git#upm",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "c5101c07762251edc82caad9e8a39d51b1229c31"
+    },
     "com.siccity.gltfutility": {
       "version": "https://github.com/siccity/gltfutility.git",
       "depth": 0,
@@ -243,7 +250,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.xr.interaction.toolkit": {
-      "version": "2.4.1",
+      "version": "2.4.3",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -291,7 +298,7 @@
     },
     "com.unity.xr.openxr": {
       "version": "1.8.2",
-      "depth": 1,
+      "depth": 0,
       "source": "registry",
       "dependencies": {
         "com.unity.xr.management": "4.0.1",
