@@ -97,10 +97,13 @@ public class GfxReplayPlayer : MonoBehaviour
 
                 GameObject instance = Instantiate(prefab);
 
+                // HACK: Gfx-replay scale is currently invalid. We're ignoring it until the issue is resolved.
+                /*
                 if (creationItem.creation.scale != null)
                 {
                     instance.transform.localScale = new Vector3(creationItem.creation.scale[0], creationItem.creation.scale[1], creationItem.creation.scale[2]);
                 }
+                */
 
                 instance = HandleFrame(instance, load.frame);
 
