@@ -19,8 +19,8 @@ We've tested these steps on a Macbook and a Linux machine.
 # Installing external SIRo data
 GLTF assets for the SIRo client aren't included in the Unity project (aside from a test asset in `Assets/temp/`). They must be imported separately. These are built using a special pipeline that isn't defined here (documentation coming soon!). A copy of this data is currently [here](https://drive.google.com/file/d/1NkDI2kLoTFjr5eEhtzQn2D1jCCdAh6_m/view?usp=drive_link). Let's assume you've downloaded this data to `path/to/habitat-lab/data/hitl_simplified/data` (outside the siro_hitl_unity_client project). Once this is done, this entire data folder needs to be imported into the Unity project, and this can be done via a script invoked from the Menu Bar. Tools > Update Data Folder... > select the external location of your data folder. Running this command will import all GLB files. They live at `Assets/Resources/data`. Running this script is the same as drag-and-dropping the data folder from Mac Finder to the Unity Editor Project Pane, under `Assets/`. You can inspect the imported assets in the Unity Editor by browsing the data folder in the Project pane.
 
-# Local testing on your dev machine
-No HITL server or VR headset is required for this.
+# Local testing with the Unity Editor and VR emulation
+No HITL server or VR headset is required for this. You can navigate around the scene but there's no interactivity (that requires the HITL server, below).
 1. Test opening a GLB file.
 * Drag from Project pane > `Assets/temp/106879104_174887235.glb` into the scene, then delete this game object when you're done testing.
 2. Test GfxReplayPlayer with a local gfx-replay json file. Conceptually, this tries to spawn and pose GameObjects with names corresponding to the render asset instances in the json, and these GameObjects should be found in the externally-imported SIRo data (above). 
@@ -43,7 +43,9 @@ No HITL server is required for this.
 4. Click "Build and Run" and ensure this completes without error. If you're prompted for a build save location, just choose `build.apk` in the project root folder.
 5. Put on your headset. The app may already be running. If not, or if you encounter issues, hit the Quest home button and it should let you quit the `siro_hitl_vr_client` program. After you quit, you can usually find the icon for the program in your list of recently-run programs. You should re-launch it.
 
-# Testing with the HITL server
+# Testing the Fetch task with the HITL server
+This is the full, interactive demo. You can use either the Unity Editor (VR emulation) or the Quest VR headset. You can run the Unity Editor on the same machine as the HITL server, side-by-side--this is shown in the screenshot above.
+
 1. Undo any local changes to `ScriptSingletonsObject` in the Inspector Pane. In particular, make sure `ReplayFileLoader` is disabled and `NetworkClient` is enabled.
 2. Under `Network Client`, enter the server address and port where you'll run the HITL server.
 3. Follow instructions for [Testing the HITL server and Unity VR client together](https://docs.google.com/document/d/1cvKuXXE2cKchi-C_O7GGVFZ5x0QU7J9gHTIETzpVKJU/edit#bookmark=id.l3y1pdpos6t).
