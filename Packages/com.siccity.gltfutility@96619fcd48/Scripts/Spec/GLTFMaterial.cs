@@ -128,7 +128,7 @@ namespace Siccity.GLTFUtility {
 		[Preserve] public class PbrMetalRoughness {
 			[JsonConverter(typeof(ColorRGBAConverter))] public Color baseColorFactor = Color.white;
 			public TextureInfo baseColorTexture;
-			public float metallicFactor = 1f;
+			public float metallicFactor = 0f;
 			public float roughnessFactor = 1f;
 			public TextureInfo metallicRoughnessTexture;
 
