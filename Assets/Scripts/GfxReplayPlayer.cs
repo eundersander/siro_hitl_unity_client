@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class GfxReplayPlayer : MonoBehaviour
 {
@@ -118,33 +116,12 @@ public class GfxReplayPlayer : MonoBehaviour
                 {
                     GameObject instance = _instanceDictionary[update.instanceKey];
 
-                    // Note various negations to adjust handedness and coordinate
-                    // convention.
-                    // Extract translation and rotation from the update state
-                    //Vector3 translation = new Vector3(
-                    //    update.state.absTransform.translation[0],
-                    //    update.state.absTransform.translation[1],
-                    //    -update.state.absTransform.translation[2]
-                    //);
-
                     Vector3 translation = CoordinateConventionHelper.ToUnityVector(update.state.absTransform.translation);
-
-                    //Quaternion rotation = new Quaternion(
-                    //    update.state.absTransform.rotation[1],
-                    //    -update.state.absTransform.rotation[2],
-                    //    -update.state.absTransform.rotation[3],
-                    //    update.state.absTransform.rotation[0]
-                    //);
-                    // rotation = _defaultRotation * rotation;
                     Quaternion rotation = CoordinateConventionHelper.ToUnityQuaternion(update.state.absTransform.rotation);
 
 
                     instance.transform.position = translation;
                     instance.transform.rotation = rotation;
-
-                    // temp hack
-                    //instance.isStatic = true;
-
                 }
             }
         }
@@ -159,6 +136,8 @@ public class GfxReplayPlayer : MonoBehaviour
                     _instanceDictionary.Remove(key);
                 }
             }
+            Resources.UnloadUnusedAssets();
+            GC.Collect();
             Debug.Log($"Processed {keyframe.deletions.Length} deletions!");
         }
     }
@@ -169,6 +148,8 @@ public class GfxReplayPlayer : MonoBehaviour
         {
             Destroy(kvp.Value);
         }
+        Resources.UnloadUnusedAssets();
+        GC.Collect();
         Debug.Log($"Deleted all {_instanceDictionary.Count} instances!");
         _instanceDictionary.Clear();
     }
