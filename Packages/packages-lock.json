@@ -8,13 +8,12 @@
       "hash": "c5101c07762251edc82caad9e8a39d51b1229c31"
     },
     "com.siccity.gltfutility": {
-      "version": "https://github.com/siccity/gltfutility.git",
+      "version": "file:com.siccity.gltfutility@96619fcd48",
       "depth": 0,
-      "source": "git",
+      "source": "embedded",
       "dependencies": {
         "com.unity.nuget.newtonsoft-json": "2.0.0"
-      },
-      "hash": "96619fcd48ffe5c4ad122837a21601a6f7c20080"
+      }
     },
     "com.unity.burst": {
       "version": "1.8.7",
