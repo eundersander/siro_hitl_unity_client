@@ -1,8 +1,7 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class GfxReplayPlayer : MonoBehaviour
 {
@@ -16,7 +15,7 @@ public class GfxReplayPlayer : MonoBehaviour
     static string SimplifyRelativePath(string path)
     {
         string[] parts = path.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-        var simplifiedParts = new System.Collections.Generic.List<string>();
+        var simplifiedParts = new List<string>();
 
         foreach (var part in parts)
         {
@@ -118,33 +117,11 @@ public class GfxReplayPlayer : MonoBehaviour
                 {
                     GameObject instance = _instanceDictionary[update.instanceKey];
 
-                    // Note various negations to adjust handedness and coordinate
-                    // convention.
-                    // Extract translation and rotation from the update state
-                    //Vector3 translation = new Vector3(
-                    //    update.state.absTransform.translation[0],
-                    //    update.state.absTransform.translation[1],
-                    //    -update.state.absTransform.translation[2]
-                    //);
-
                     Vector3 translation = CoordinateConventionHelper.ToUnityVector(update.state.absTransform.translation);
-
-                    //Quaternion rotation = new Quaternion(
-                    //    update.state.absTransform.rotation[1],
-                    //    -update.state.absTransform.rotation[2],
-                    //    -update.state.absTransform.rotation[3],
-                    //    update.state.absTransform.rotation[0]
-                    //);
-                    // rotation = _defaultRotation * rotation;
                     Quaternion rotation = CoordinateConventionHelper.ToUnityQuaternion(update.state.absTransform.rotation);
-
 
                     instance.transform.position = translation;
                     instance.transform.rotation = rotation;
-
-                    // temp hack
-                    //instance.isStatic = true;
-
                 }
             }
         }
@@ -159,6 +136,7 @@ public class GfxReplayPlayer : MonoBehaviour
                     _instanceDictionary.Remove(key);
                 }
             }
+            StartCoroutine("ReleaseUnusedMemory");
             Debug.Log($"Processed {keyframe.deletions.Length} deletions!");
         }
     }
@@ -169,7 +147,17 @@ public class GfxReplayPlayer : MonoBehaviour
         {
             Destroy(kvp.Value);
         }
+        StartCoroutine("ReleaseUnusedMemory");
         Debug.Log($"Deleted all {_instanceDictionary.Count} instances!");
         _instanceDictionary.Clear();
+    }
+
+    IEnumerator ReleaseUnusedMemory()
+    {
+        // Wait for objects to be destroyed.
+        yield return new WaitForEndOfFrame();
+
+        Resources.UnloadUnusedAssets();
+        GC.Collect();
     }
 }
