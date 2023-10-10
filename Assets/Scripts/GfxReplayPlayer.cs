@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -14,7 +15,7 @@ public class GfxReplayPlayer : MonoBehaviour
     static string SimplifyRelativePath(string path)
     {
         string[] parts = path.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-        var simplifiedParts = new System.Collections.Generic.List<string>();
+        var simplifiedParts = new List<string>();
 
         foreach (var part in parts)
         {
@@ -119,7 +120,6 @@ public class GfxReplayPlayer : MonoBehaviour
                     Vector3 translation = CoordinateConventionHelper.ToUnityVector(update.state.absTransform.translation);
                     Quaternion rotation = CoordinateConventionHelper.ToUnityQuaternion(update.state.absTransform.rotation);
 
-
                     instance.transform.position = translation;
                     instance.transform.rotation = rotation;
                 }
@@ -136,8 +136,7 @@ public class GfxReplayPlayer : MonoBehaviour
                     _instanceDictionary.Remove(key);
                 }
             }
-            Resources.UnloadUnusedAssets();
-            GC.Collect();
+            StartCoroutine("ReleaseUnusedMemory");
             Debug.Log($"Processed {keyframe.deletions.Length} deletions!");
         }
     }
@@ -148,9 +147,17 @@ public class GfxReplayPlayer : MonoBehaviour
         {
             Destroy(kvp.Value);
         }
-        Resources.UnloadUnusedAssets();
-        GC.Collect();
+        StartCoroutine("ReleaseUnusedMemory");
         Debug.Log($"Deleted all {_instanceDictionary.Count} instances!");
         _instanceDictionary.Clear();
+    }
+
+    IEnumerator ReleaseUnusedMemory()
+    {
+        // Wait for objects to be destroyed.
+        yield return new WaitForEndOfFrame();
+
+        Resources.UnloadUnusedAssets();
+        GC.Collect();
     }
 }
