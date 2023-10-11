@@ -8,6 +8,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Scripting;
 using Newtonsoft.Json.Linq;
+using UnityEditor.Build;
 
 namespace Siccity.GLTFUtility {
 	// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#material
@@ -98,6 +99,27 @@ namespace Siccity.GLTFUtility {
 			if (alphaMode == AlphaMode.MASK) {
 				mat.SetFloat("_AlphaCutoff", alphaCutoff);
 			}
+
+			// HACK: Heuristic to adapt roughness of materials with ior or specularFactors.
+			{
+				float? ext_ior = extensions?.KHR_materials_ior?.ior;
+				float? ext_specularFactor = extensions?.KHR_materials_specular?.specularFactor;
+				float baseRoughnessFactor = mat.GetFloat("_Roughness");
+				float correctedRoughnessFactor = 1.0f;
+
+				if (ext_ior != null) {
+					if (ext_specularFactor != null) {
+						float invSpecFactor = Mathf.Clamp(1.0f - ext_specularFactor.Value, 0.0f, 1.0f);
+						float invRoughnessFactor = Mathf.Clamp(1.0f - baseRoughnessFactor, 0.0f, 1.0f);
+						correctedRoughnessFactor = 1.0f - (ext_specularFactor.Value * invRoughnessFactor);
+					}
+					float iorCorrectionFactor = Mathf.Clamp(1.0f - ext_ior.Value, 0.0f, 1.0f);
+					correctedRoughnessFactor = Mathf.Lerp(baseRoughnessFactor, correctedRoughnessFactor, iorCorrectionFactor);
+				}
+
+				mat.SetFloat("_Roughness", correctedRoughnessFactor);
+			}
+
 			mat.name = name;
 			onFinish(mat);
 		}
@@ -122,6 +144,10 @@ namespace Siccity.GLTFUtility {
 
 		[Preserve] public class Extensions {
 			public PbrSpecularGlossiness KHR_materials_pbrSpecularGlossiness = null;
+
+			public ExtMaterialsIOR KHR_materials_ior = null;
+
+			public ExtMaterialsSpecular KHR_materials_specular = null;
 		}
 
 		// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#pbrmetallicroughness
@@ -275,6 +301,14 @@ namespace Siccity.GLTFUtility {
 			public interface IExtension {
 				void Apply(GLTFMaterial.TextureInfo texInfo, Material material, string textureSamplerName);
 			}
+		}
+
+		[Preserve] public class ExtMaterialsIOR {
+			public float? ior = null;
+		}
+
+		[Preserve] public class ExtMaterialsSpecular {
+			public float? specularFactor = null;
 		}
 
 		public class ImportTask : Importer.ImportTask<ImportResult[]> {
