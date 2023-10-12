@@ -120,6 +120,11 @@ namespace Siccity.GLTFUtility {
 				mat.SetFloat("_Roughness", correctedRoughnessFactor);
 			}
 
+			// HACK: Force removal of roughness for glass materials
+			if (name == "FP_GLASS" || name == "MIRROR") {
+				mat.SetFloat("_Roughness", 0.0f);
+			}
+
 			mat.name = name;
 			onFinish(mat);
 		}
