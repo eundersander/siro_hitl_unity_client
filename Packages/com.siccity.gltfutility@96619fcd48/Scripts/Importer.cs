@@ -370,7 +370,7 @@ namespace Siccity.GLTFUtility {
 						case "KHR_draco_mesh_compression":
 							break;
 						default:
-							Debug.LogWarning($"GLTFUtility: Required extension '{gLTFObject.extensionsRequired[i]}' not supported. Import process will proceed but results may vary.");
+							Debug.LogWarning($"GLTFUtility: Required extension '{gLTFObject.extensionsRequired[i]}' not supported. Import process will proceed but results may vary.\nAffected asset: '{gLTFObject.scenes[0].name}'.");
 							break;
 					}
 				}
