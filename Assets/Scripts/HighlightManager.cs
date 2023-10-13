@@ -15,14 +15,14 @@ public class HighlightManager : MonoBehaviour
     [Tooltip("Vertex color of the highlight lines.")]
     public Color highlightColor = Color.white;
 
-    [Tooltip("Material used to shade the highlight circles.")]
-    public Material highlightMaterial;
+    [Tooltip("Materials used to shade the highlight circles.")]
+    public Material[] highlightMaterials;
 
     [Tooltip("Thickness of the highlight circles, in meters.")]
     public float highlightWidth = 0.025f;
 
-    [Tooltip("Radius of the highlight circles, in meters.")]
-    public float highlightRadius = 0.15f;
+    [Tooltip("Base radius of the highlight circles, in meters. It is multiplied by the radius received from server messages.")]
+    public float highlightBaseRadius = 0.15f;
 
     private LineRenderer[] _highlightPool;
     private float _arcSegmentLength;
@@ -48,14 +48,14 @@ public class HighlightManager : MonoBehaviour
             lineRenderer.endColor = highlightColor;
             lineRenderer.startWidth = highlightWidth;
             lineRenderer.endWidth = highlightWidth;
-            lineRenderer.material = highlightMaterial;
+            lineRenderer.materials = highlightMaterials;
             _highlightPool[i] = lineRenderer;
             lineRenderer.positionCount = circleResolution;
             for (int j = 0; j < circleResolution; ++j)
             {
-                float xOffset = highlightRadius * Mathf.Sin(j * _arcSegmentLength);
-                float zOffset = highlightRadius * Mathf.Cos(j * _arcSegmentLength);
-                lineRenderer.SetPosition(j, new Vector3(xOffset, 0.0f, zOffset));
+                float xOffset = highlightBaseRadius * Mathf.Sin(j * _arcSegmentLength);
+                float yOffset = highlightBaseRadius * Mathf.Cos(j * _arcSegmentLength);
+                lineRenderer.SetPosition(j, new Vector3(xOffset, yOffset, 0.0f));
             }
             lineRenderer.enabled = false;
         }
@@ -80,8 +80,15 @@ public class HighlightManager : MonoBehaviour
                 var highlight = _highlightPool[i];
                 highlight.enabled = true;
 
+                // Apply translation from message
                 Vector3 center = CoordinateConventionHelper.ToUnityVector(highlightsMessage[i].t);
                 highlight.transform.position = center;
+
+                // Billboarding
+                highlight.transform.LookAt(Camera.main.transform);
+
+                // Apply radius from message using scale
+                highlight.transform.localScale = highlightsMessage[i].r * Vector3.one;
             }
         }
     }

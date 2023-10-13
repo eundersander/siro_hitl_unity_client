@@ -1,10 +1,11 @@
 // Unity built-in shader source. Copyright (c) 2016 Unity Technologies. MIT license (see license.txt)
 
-Shader "Habitat/Highlight" {
+Shader "Habitat/Object Highlight" {
     Properties {
-        _Color ("Text Color", Color) = (1,1,1,1)
+        _Color ("Color", Color) = (1,1,1,1)
         _FadeOutDistanceStart ("Fade Out Distance Start", float) = 2.5
         _FadeOutDistanceEnd ("Fade Out Distance End", float) = 5
+        [Enum(UnityEngine.Rendering.CompareFunction)] _ZTest("ZTest", Float) = 4 //"LEqual"
     }
 
     SubShader {
@@ -17,7 +18,7 @@ Shader "Habitat/Highlight" {
         }
         Lighting Off
         Cull Off
-        ZTest LEqual
+        ZTest [_ZTest]
         ZWrite On
         Blend SrcAlpha OneMinusSrcAlpha
 
@@ -66,7 +67,7 @@ Shader "Habitat/Highlight" {
             fixed4 frag (v2f i) : SV_Target
             {
                 fixed4 col = i.color;
-                return i.color;
+                return col;
             }
             ENDCG
         }

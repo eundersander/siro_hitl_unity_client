@@ -86,4 +86,5 @@ public class Message
 public class Highlight
 {
     public List<float> t;
+    public float r;
 }
