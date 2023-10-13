@@ -421,6 +421,7 @@ GameObject:
   - component: {fileID: 695650935}
   - component: {fileID: 695650936}
   - component: {fileID: 695650937}
+  - component: {fileID: 695650938}
   m_Layer: 0
   m_Name: ScriptSingletonsObject
   m_TagString: Untagged
@@ -455,8 +456,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cb1d99323d59a4e70a3d43daba019d51, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  serverAddress: 127.0.0.1
-  serverPort: 8888
+  defaultServerPort: 8888
   vrHeadsetObject: {fileID: 1708247983}
   vrLeftControllerObject: {fileID: 2075813056}
   vrRightControllerObject: {fileID: 1032753413}
@@ -506,6 +506,22 @@ MonoBehaviour:
   m_GameObject: {fileID: 695650929}
   m_Enabled: 1
   m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 887d79a418cbc4c15bacfe9983a11b44, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _mouseoverForTooltip: 0
+  defaultServerLocations:
+  - 127.0.0.1
+  - 127.0.0.1:8888
+--- !u!114 &695650938
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 695650929}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9854ce71fd64f9c72aff21a8e6a1fc6c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
@@ -516,7 +532,7 @@ MonoBehaviour:
   - {fileID: 2100000, guid: 8271dc041bee6326ea86b838c5220c8f, type: 2}
   - {fileID: 2100000, guid: 10063642764bd84a8b91c294f1500d8b, type: 2}
   highlightWidth: 0.005
-  highlightBaseRadius: 0.5
+  highlightBaseRadius: 1
 --- !u!1001 &878938825
 PrefabInstance:
   m_ObjectHideFlags: 0

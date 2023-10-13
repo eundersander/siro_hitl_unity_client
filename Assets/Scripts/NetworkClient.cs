@@ -1,8 +1,11 @@
 using System;
 using UnityEngine;
-
+using System.Collections.Generic;
 using NativeWebSocket;
 using UnityEngine.Assertions;
+using UnityEngine.Windows;
+using System.Collections;
+using System.Threading.Tasks;
 
 [Serializable]
 public class ClientState
@@ -13,19 +16,18 @@ public class ClientState
 
 public class NetworkClient : MonoBehaviour
 {
-    public string serverAddress; //  = "192.168.4.58";
-    public string serverPort; // = "8888";
+    public int defaultServerPort = 8888;
 
     public GameObject vrHeadsetObject;
     public GameObject vrLeftControllerObject;
     public GameObject vrRightControllerObject;
 
-    string wsProtocol;
-    string _fullServerAddress;
-
-    WebSocket websocket;
+    List<string> _serverURLs = new List<string>();
+    private WebSocket mainWebSocket;
+    private int currentServerIndex = 0;
 
     private GfxReplayPlayer _player;
+    private ConfigLoader _configLoader;
 
     ClientState _clientState = new ClientState();
     XRInputHelper _xrInputHelper;
@@ -34,19 +36,27 @@ public class NetworkClient : MonoBehaviour
     {
         _player = GetComponent<GfxReplayPlayer>();
         Assert.IsTrue(_player);  // our object should have a GfxReplayPlayer
+        _configLoader = GetComponent<ConfigLoader>();
+        Assert.IsTrue(_configLoader);
 
         _xrInputHelper = new XRInputHelper();
 
-        bool isHttps = false;
-        wsProtocol = isHttps ? "wss" : "ws";
-        _fullServerAddress = $"{wsProtocol}://{serverAddress}:{serverPort}";
+        string[] serverLocations = _configLoader.AppConfig.serverLocations;
+        Assert.IsTrue(serverLocations.Length > 0);
+        foreach (string location in serverLocations)
+        {
+            string adjustedLocation = location;
+            if (!adjustedLocation.Contains(":"))
+            {
+                adjustedLocation += ":" + defaultServerPort;
+            }
 
-        SetConnectionState(false);
+            bool isHttps = false;
+            string wsProtocol = isHttps ? "wss" : "ws";
+            _serverURLs.Add($"{wsProtocol}://{adjustedLocation}");
+        }
 
-        ConnectWebSocket();
-
-        // Attempt reconnection every X seconds
-        InvokeRepeating("AttemptReconnection", 0.0f, 5.0f);
+        StartCoroutine(TryConnectToServers());
 
         // Keep sending messages at every 0.1s
         InvokeRepeating("SendClientState", 0.0f, 0.1f);
@@ -54,46 +64,88 @@ public class NetworkClient : MonoBehaviour
 
     void Update()
     {
-        if (websocket != null)
+        if (mainWebSocket != null)
         {
 #if !UNITY_WEBGL || UNITY_EDITOR
-            websocket.DispatchMessageQueue();
+            mainWebSocket.DispatchMessageQueue();
 #endif
         }
     }
 
-    async void ConnectWebSocket()
+    private IEnumerator TryConnectToServers()
     {
-        websocket = new WebSocket(_fullServerAddress);
+        while (true)
+        {
+            if (mainWebSocket == null)
+            {
+                yield return new WaitForSeconds(1); // always wait 1s before next try
 
+                currentServerIndex++;
+                if (currentServerIndex >= _serverURLs.Count)
+                {
+                    currentServerIndex = 0; // Reset to try again from the beginning.
+                }
+
+                string url = _serverURLs[currentServerIndex];
+                Debug.Log("Attempting to connect to: " + url);
+
+                var websocket = new WebSocket(url);
+                var connectTask = ConnectWebSocket(websocket, url);
+
+                // Wait for 8s, then cancel the connection attempt (i.e. time out)
+                yield return new WaitForSeconds(8);
+
+                if (mainWebSocket == null)
+                {
+                    Debug.LogWarning($"Timeout connecting to {url}.");
+                    // Note that this websocket object is in the middle of an async
+                    // call to Connect(), but this class appears safe to call
+                    // CancelConnection in this situation.
+                    websocket.CancelConnection();
+                }
+            }
+            else
+            {
+                // If we have an active connection, we simply wait here.
+                // Adjust this to check more or less frequently as desired.
+                yield return new WaitForSeconds(1);
+            }
+        }
+    }
+
+    private async Task ConnectWebSocket(WebSocket websocket, string url)
+    {
         websocket.OnOpen += () =>
         {
-            Debug.Log("Connection open!");
+            Debug.Log("Connected to: " + url);
+
             websocket.SendText("client ready!");
             Debug.Log("Sent message: client ready!");
 
-            SetConnectionState(true);
-
             // delete all old instances on (re)connect
             _player.DeleteAllInstancesFromKeyframes();
+
+            mainWebSocket = websocket;
+            currentServerIndex = 0; // Reset index when successfully connected.
         };
 
         websocket.OnError += (e) =>
         {
-            Debug.LogError("WebSocket error: " + e);
-            SetConnectionState(false);
-            websocket.Close();
+            Debug.LogWarning($"Error connecting to {url}: {e}.");
         };
 
         websocket.OnClose += (e) =>
         {
-            Debug.Log("Connection closed!");
+            if (websocket == mainWebSocket)
+            {
+                Debug.Log("Main connection closed!");
+                mainWebSocket = null;
+            }
         };
 
         websocket.OnMessage += (bytes) =>
         {
             string message = System.Text.Encoding.UTF8.GetString(bytes);
-
             ProcessReceivedKeyframes(message);
         };
 
@@ -124,38 +176,27 @@ public class NetworkClient : MonoBehaviour
 
     async void SendClientState()
     {
-        if (websocket.State == WebSocketState.Open)
+        if (mainWebSocket != null)
         {
+            Assert.IsTrue(mainWebSocket.State == WebSocketState.Open);
             UpdateClientState();
             string jsonStr = JsonUtility.ToJson(_clientState);
 
             _xrInputHelper.OnEndFrame();
                 
-            await websocket.SendText(jsonStr);
-        }
-    }
-
-    void AttemptReconnection()
-    {
-        if (websocket == null || websocket.State == WebSocketState.Closed)
-        {
-            SetConnectionState(false);
-            ConnectWebSocket();
+            await mainWebSocket.SendText(jsonStr);
         }
     }
 
     void OnDestroy()
     {
-        if (websocket != null)
+        if (mainWebSocket != null)
         {
-            websocket.Close();
+            mainWebSocket.Close();
+            mainWebSocket = null;
         }
 
-        CancelInvoke("AttemptReconnection");
-    }
-
-    void SetConnectionState(bool connected)
-    {
-        Debug.Log($"SetConnectionState: {connected}");
+        StopAllCoroutines();
+        CancelInvoke("SendClientState");
     }
 }
