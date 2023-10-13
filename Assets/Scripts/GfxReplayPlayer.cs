@@ -5,11 +5,20 @@ using UnityEngine;
 
 public class GfxReplayPlayer : MonoBehaviour
 {
-
     private Dictionary<int, GameObject> _instanceDictionary = new Dictionary<int, GameObject>();
     private Dictionary<string, Load> _loadDictionary = new Dictionary<string, Load>();
+    private Quaternion _defaultRotation = Quaternion.Euler(0, 180, 0);
 
-    private Quaternion _defaultRotation = Quaternion.Euler(0, 180, 0); //  Quaternion.Euler(0, 180, 0);
+    HighlightManager _highlightManager;
+
+    void Awake()
+    {
+        _highlightManager = GetComponent<HighlightManager>();
+        if (_highlightManager == null)
+        {
+            Debug.LogWarning($"Highlight manager missing from '{name}'. Object highlights will be ignored.");
+        }
+    }
 
     // simplify "path/abc/../to/file" to "path/to/file"
     static string SimplifyRelativePath(string path)
@@ -126,6 +135,7 @@ public class GfxReplayPlayer : MonoBehaviour
             }
         }
 
+        // Handle Deletions
         if (keyframe.deletions != null)
         {
             foreach (var key in keyframe.deletions)
@@ -138,6 +148,12 @@ public class GfxReplayPlayer : MonoBehaviour
             }
             StartCoroutine("ReleaseUnusedMemory");
             Debug.Log($"Processed {keyframe.deletions.Length} deletions!");
+        }
+
+        // Handle message
+        if (_highlightManager)
+        {
+            _highlightManager.ProcessKeyframe(keyframe);
         }
     }
 

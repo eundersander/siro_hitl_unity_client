@@ -17,6 +17,7 @@ public class KeyframeData
     public CreationItem[] creations;
     public StateUpdate[] stateUpdates;
     public int[] deletions;
+    public Message message;
 }
 
 [Serializable]
@@ -73,4 +74,17 @@ public class StateUpdate
             public List<float> rotation;
         }
     }
+}
+
+[Serializable]
+public class Message
+{
+    public Highlight[] highlights;
+}
+
+[Serializable]
+public class Highlight
+{
+    public List<float> t;
+    public float r;
 }
