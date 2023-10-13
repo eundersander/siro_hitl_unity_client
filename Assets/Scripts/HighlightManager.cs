@@ -19,20 +19,19 @@ public class HighlightManager : MonoBehaviour
     public Material[] highlightMaterials;
 
     [Tooltip("Thickness of the highlight circles, in meters.")]
-    public float highlightWidth = 0.025f;
+    public float highlightWidth = 0.005f;
 
     [Tooltip("Base radius of the highlight circles, in meters. It is multiplied by the radius received from server messages.")]
-    public float highlightBaseRadius = 0.15f;
+    public float highlightBaseRadius = 1.0f;
 
     private LineRenderer[] _highlightPool;
-    private float _arcSegmentLength;
     private int _activeHighlightCount = 0;
 
     // Start is called before the first frame update
     void Awake()
     {
-        _arcSegmentLength = TWO_PI / circleResolution;
         _highlightPool = new LineRenderer[poolSize];
+        float _arcSegmentLength = TWO_PI / circleResolution;
 
         // Construct a pool of highlight line renderers
         GameObject container = new GameObject("Highlights");
@@ -41,7 +40,9 @@ public class HighlightManager : MonoBehaviour
         {
             GameObject highlight = new GameObject($"Highlight {i}");
             var lineRenderer = highlight.AddComponent<LineRenderer>();
+
             highlight.transform.parent = container.transform;
+            lineRenderer.enabled = false;
             lineRenderer.loop = true;
             lineRenderer.useWorldSpace = false;
             lineRenderer.startColor = highlightColor;
@@ -49,7 +50,6 @@ public class HighlightManager : MonoBehaviour
             lineRenderer.startWidth = highlightWidth;
             lineRenderer.endWidth = highlightWidth;
             lineRenderer.materials = highlightMaterials;
-            _highlightPool[i] = lineRenderer;
             lineRenderer.positionCount = circleResolution;
             for (int j = 0; j < circleResolution; ++j)
             {
@@ -57,7 +57,7 @@ public class HighlightManager : MonoBehaviour
                 float yOffset = highlightBaseRadius * Mathf.Cos(j * _arcSegmentLength);
                 lineRenderer.SetPosition(j, new Vector3(xOffset, yOffset, 0.0f));
             }
-            lineRenderer.enabled = false;
+            _highlightPool[i] = lineRenderer;
         }
     }
 
@@ -91,10 +91,5 @@ public class HighlightManager : MonoBehaviour
                 highlight.transform.localScale = highlightsMessage[i].r * Vector3.one;
             }
         }
-    }
-
-    void Update()
-    {
-        
     }
 }
