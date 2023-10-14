@@ -422,6 +422,7 @@ GameObject:
   - component: {fileID: 695650936}
   - component: {fileID: 695650937}
   - component: {fileID: 695650938}
+  - component: {fileID: 695650939}
   m_Layer: 0
   m_Name: ScriptSingletonsObject
   m_TagString: Untagged
@@ -533,6 +534,20 @@ MonoBehaviour:
   - {fileID: 2100000, guid: 10063642764bd84a8b91c294f1500d8b, type: 2}
   highlightWidth: 0.005
   highlightBaseRadius: 1
+--- !u!114 &695650939
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 695650929}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8dc206cd601dc6f70b3d0f2a7d129d4a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  xrOrigin: {fileID: 2109134565}
+  xrCamera: {fileID: 1708247983}
 --- !u!1001 &878938825
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -760,6 +775,11 @@ MonoBehaviour:
 --- !u!1 &2075813056 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 9014170785475729474, guid: 895f6f3c2d334633b5800312285058d2, type: 3}
+  m_PrefabInstance: {fileID: 878938825}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &2109134565 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 9014170783728641055, guid: 895f6f3c2d334633b5800312285058d2, type: 3}
   m_PrefabInstance: {fileID: 878938825}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &2126938987

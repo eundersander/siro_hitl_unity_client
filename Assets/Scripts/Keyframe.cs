@@ -80,6 +80,8 @@ public class StateUpdate
 public class Message
 {
     public Highlight[] highlights;
+
+    public List<float> humanoidPosition;
 }
 
 [Serializable]
