@@ -546,8 +546,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8dc206cd601dc6f70b3d0f2a7d129d4a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  xrOrigin: {fileID: 2109134565}
-  xrCamera: {fileID: 1708247983}
+  xrCameraNode: {fileID: 1708247983}
+  xrOriginNode: {fileID: 2109134565}
 --- !u!1001 &878938825
 PrefabInstance:
   m_ObjectHideFlags: 0

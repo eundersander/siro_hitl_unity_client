@@ -10,7 +10,7 @@ public class GfxReplayPlayer : MonoBehaviour
     private Quaternion _defaultRotation = Quaternion.Euler(0, 180, 0);
 
     HighlightManager _highlightManager;
-    PlayerPositionHandler _playerPositionHandler;
+    AvatarPositionHandler _avatarPositionHandler;
 
     void Awake()
     {
@@ -19,10 +19,10 @@ public class GfxReplayPlayer : MonoBehaviour
         {
             Debug.LogWarning($"Highlight manager missing from '{name}'. Object highlights will be ignored.");
         }
-        _playerPositionHandler = GetComponent<PlayerPositionHandler>();
-        if (_highlightManager == null)
+        _avatarPositionHandler = GetComponent<AvatarPositionHandler>();
+        if (_avatarPositionHandler == null)
         {
-            Debug.LogWarning($"Player position handler missing from '{name}'. Humanoid position updates will be ignored.");
+            Debug.LogWarning($"Avatar position handler missing from '{name}'. Avatar position updates will be ignored.");
         }
     }
 
@@ -161,10 +161,9 @@ public class GfxReplayPlayer : MonoBehaviour
         {
             _highlightManager.ProcessKeyframe(keyframe);
         }
-
-        if (_playerPositionHandler)
+        if (_avatarPositionHandler)
         {
-            _playerPositionHandler.ProcessKeyframe(keyframe);
+            _avatarPositionHandler.ProcessKeyframe(keyframe);
         }
     }
 

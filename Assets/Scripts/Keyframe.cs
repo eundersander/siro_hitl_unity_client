@@ -81,7 +81,7 @@ public class Message
 {
     public Highlight[] highlights;
 
-    public List<float> humanoidPosition;
+    public List<float> teleportAvatarBasePosition;
 }
 
 [Serializable]
