@@ -8,7 +8,6 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Scripting;
 using Newtonsoft.Json.Linq;
-using UnityEditor.Build;
 
 namespace Siccity.GLTFUtility {
 	// https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md#material
