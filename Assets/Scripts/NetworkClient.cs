@@ -16,6 +16,21 @@ public class ClientState
 
 public class NetworkClient : MonoBehaviour
 {
+    public class FlagObject
+    {
+        private bool flag = false;
+
+        public void SetFlag()
+        {
+            flag = true;
+        }
+
+        public bool IsSet()
+        {
+            return flag;
+        }
+    }
+
     public int defaultServerPort = 8888;
 
     public GameObject vrHeadsetObject;
@@ -78,8 +93,6 @@ public class NetworkClient : MonoBehaviour
         {
             if (mainWebSocket == null)
             {
-                yield return new WaitForSeconds(1); // always wait 1s before next try
-
                 currentServerIndex++;
                 if (currentServerIndex >= _serverURLs.Count)
                 {
@@ -87,21 +100,32 @@ public class NetworkClient : MonoBehaviour
                 }
 
                 string url = _serverURLs[currentServerIndex];
-                Debug.Log("Attempting to connect to: " + url);
+                Debug.Log("Attempting to connect to " + url);
 
                 var websocket = new WebSocket(url);
-                var connectTask = ConnectWebSocket(websocket, url);
+                FlagObject doAbort = new FlagObject();
+                // This is an async function that will finish later (but
+                // still on the main Unity thread).
+                var connectTask = ConnectWebSocket(websocket, url, doAbort);
 
-                // Wait for 8s, then cancel the connection attempt (i.e. time out)
-                yield return new WaitForSeconds(8);
+                // Wait for 4s, then check the result
+                yield return new WaitForSeconds(4);
+
+                if (mainWebSocket == null && websocket.State == WebSocketState.Connecting)
+                {
+                    // Wait another 4s
+                    yield return new WaitForSeconds(4);
+                }
 
                 if (mainWebSocket == null)
                 {
-                    Debug.LogWarning($"Timeout connecting to {url}.");
-                    // Note that this websocket object is in the middle of an async
-                    // call to Connect(), but this class appears safe to call
-                    // CancelConnection in this situation.
-                    websocket.CancelConnection();
+                    if (websocket.State == WebSocketState.Connecting)
+                    {
+                        Debug.LogWarning($"Timeout! Aborting connect to {url}.");
+                    }
+                    // See OnOpen callback in ConnectWebSocket where we check
+                    // this flag and potentially discard the connection.
+                    doAbort.SetFlag();
                 }
             }
             else
@@ -113,10 +137,17 @@ public class NetworkClient : MonoBehaviour
         }
     }
 
-    private async Task ConnectWebSocket(WebSocket websocket, string url)
+    private async Task ConnectWebSocket(WebSocket websocket, string url, FlagObject doAbort)
     {
         websocket.OnOpen += () =>
         {
+            if (doAbort.IsSet())
+            {
+                Debug.Log("Discarding connection to " + url);
+                websocket.Close();
+                return;
+            }
+
             Debug.Log("Connected to: " + url);
 
             websocket.SendText("client ready!");
@@ -126,7 +157,6 @@ public class NetworkClient : MonoBehaviour
             _player.DeleteAllInstancesFromKeyframes();
 
             mainWebSocket = websocket;
-            currentServerIndex = 0; // Reset index when successfully connected.
         };
 
         websocket.OnError += (e) =>
@@ -176,9 +206,8 @@ public class NetworkClient : MonoBehaviour
 
     async void SendClientState()
     {
-        if (mainWebSocket != null)
+        if (mainWebSocket != null && mainWebSocket.State == WebSocketState.Open)
         {
-            Assert.IsTrue(mainWebSocket.State == WebSocketState.Open);
             UpdateClientState();
             string jsonStr = JsonUtility.ToJson(_clientState);
 
