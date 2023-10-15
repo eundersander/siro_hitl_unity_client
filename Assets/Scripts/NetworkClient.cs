@@ -40,6 +40,8 @@ public class NetworkClient : MonoBehaviour
     List<string> _serverURLs = new List<string>();
     private WebSocket mainWebSocket;
     private int currentServerIndex = 0;
+    private int messagesReceivedCount = 0;
+    private int frameCount = 0;
 
     private GfxReplayPlayer _player;
     private ConfigLoader _configLoader;
@@ -73,6 +75,8 @@ public class NetworkClient : MonoBehaviour
 
         StartCoroutine(TryConnectToServers());
 
+        StartCoroutine(LogMessageRate());
+
         // Keep sending messages at every 0.1s
         InvokeRepeating("SendClientState", 0.0f, 0.1f);
     }
@@ -85,6 +89,7 @@ public class NetworkClient : MonoBehaviour
             mainWebSocket.DispatchMessageQueue();
 #endif
         }
+        frameCount++;
     }
 
     private IEnumerator TryConnectToServers()
@@ -177,9 +182,44 @@ public class NetworkClient : MonoBehaviour
         {
             string message = System.Text.Encoding.UTF8.GetString(bytes);
             ProcessReceivedKeyframes(message);
+            messagesReceivedCount++;
         };
 
         await websocket.Connect();
+    }
+
+    private bool isConnected()
+    {
+        return mainWebSocket != null && mainWebSocket.State == WebSocketState.Open;
+    }
+
+    private IEnumerator LogMessageRate()
+    {
+        while (true)
+        {
+            // Wait for a second
+            float duration = 2.0F;
+            yield return new WaitForSeconds(duration);
+
+            float fps = frameCount / duration;
+
+            if (isConnected())
+            {
+                // Log the count of received messages
+                float messageRate = (float)messagesReceivedCount / duration;
+
+                Debug.Log($"Message rate: {messageRate.ToString("F1")}, FPS: {fps.ToString("F1")}");
+
+                _player.SetKeyframeRate(messageRate);
+            } else
+            {
+                Debug.Log($"disconnected, FPS: {fps.ToString("F1")}");
+            }
+
+            // Reset the count
+            messagesReceivedCount = 0;
+            frameCount = 0;
+        }
     }
 
     void ProcessReceivedKeyframes(string message)
@@ -206,7 +246,7 @@ public class NetworkClient : MonoBehaviour
 
     async void SendClientState()
     {
-        if (mainWebSocket != null && mainWebSocket.State == WebSocketState.Open)
+        if (isConnected())
         {
             UpdateClientState();
             string jsonStr = JsonUtility.ToJson(_clientState);
