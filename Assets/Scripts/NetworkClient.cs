@@ -228,4 +228,9 @@ public class NetworkClient : MonoBehaviour
         StopAllCoroutines();
         CancelInvoke("SendClientState");
     }
+
+    public bool IsConnected() 
+    {
+        return mainWebSocket != null && mainWebSocket.State == WebSocketState.Open;
+    }
 }
