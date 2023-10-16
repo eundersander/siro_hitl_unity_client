@@ -2,15 +2,31 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 public class GfxReplayPlayer : MonoBehaviour
 {
+    public struct MovementData
+    {
+        public Vector3 startPosition;    // Starting position of the interpolation
+        public Quaternion startRotation; // Starting rotation of the interpolation
+
+        public Vector3 endPosition;      // Target position of the interpolation
+        public Quaternion endRotation;   // Target rotation of the interpolation
+
+        public float startTime;          // Time when this movement data was created or updated
+    }
+
     private Dictionary<int, GameObject> _instanceDictionary = new Dictionary<int, GameObject>();
     private Dictionary<string, Load> _loadDictionary = new Dictionary<string, Load>();
     private Quaternion _defaultRotation = Quaternion.Euler(0, 180, 0);
 
     HighlightManager _highlightManager;
     AvatarPositionHandler _avatarPositionHandler;
+
+    private Dictionary<int, MovementData> _movementData = new Dictionary<int, MovementData>();
+    private float _keyframeInterval = 0.1f;  // assume 10Hz, but see also SetKeyframeRate
+    const bool _useKeyframeInterpolation = true;
 
     void Awake()
     {
@@ -24,6 +40,12 @@ public class GfxReplayPlayer : MonoBehaviour
         {
             Debug.LogWarning($"Avatar position handler missing from '{name}'. Avatar position updates will be ignored.");
         }
+    }
+
+    public void SetKeyframeRate(float rate)
+    {
+        Assert.IsTrue(rate > 0.0F);
+        _keyframeInterval = 1.0F / rate;
     }
 
     // simplify "path/abc/../to/file" to "path/to/file"
@@ -77,6 +99,138 @@ public class GfxReplayPlayer : MonoBehaviour
         }
     }
 
+
+    private void ProcessStateUpdatesImmediate(KeyframeData keyframe)
+    {
+        // Handle State Updates
+        if (keyframe.stateUpdates != null)
+        {
+            foreach (var update in keyframe.stateUpdates)
+            {
+                if (_instanceDictionary.ContainsKey(update.instanceKey))
+                {
+                    GameObject instance = _instanceDictionary[update.instanceKey];
+
+                    Vector3 translation = CoordinateConventionHelper.ToUnityVector(update.state.absTransform.translation);
+                    Quaternion rotation = CoordinateConventionHelper.ToUnityQuaternion(update.state.absTransform.rotation);
+
+                    instance.transform.position = translation;
+                    instance.transform.rotation = rotation;
+                }
+            }
+        }
+    }
+
+    private void ProcessStateUpdatesForInterpolation(KeyframeData keyframe)
+    {
+        if (keyframe.stateUpdates != null)
+        {
+            foreach (var update in keyframe.stateUpdates)
+            {
+                if (_instanceDictionary.ContainsKey(update.instanceKey))
+                {
+                    GameObject instance = _instanceDictionary[update.instanceKey];
+
+                    Vector3 newTranslation = CoordinateConventionHelper.ToUnityVector(update.state.absTransform.translation);
+                    Quaternion newRotation = CoordinateConventionHelper.ToUnityQuaternion(update.state.absTransform.rotation);
+
+                    // Check if the instance is at the origin
+                    if (instance.transform.position == Vector3.zero)
+                    {
+                        // Snap to the new position and rotation
+                        instance.transform.position = newTranslation;
+                        instance.transform.rotation = newRotation;
+                    }
+                    else
+                    {
+                        // Set up the interpolation
+                        if (!_movementData.ContainsKey(update.instanceKey))
+                        {
+                            _movementData[update.instanceKey] = new MovementData
+                            {
+                                startPosition = instance.transform.position,
+                                startRotation = instance.transform.rotation,
+                                endPosition = newTranslation,
+                                endRotation = newRotation,
+                                startTime = Time.time
+                            };
+                        }
+                        else
+                        {
+                            // Update the existing MovementData
+                            var data = _movementData[update.instanceKey];
+                            data.startPosition = instance.transform.position;
+                            data.startRotation = instance.transform.rotation;
+                            data.endPosition = newTranslation;
+                            data.endRotation = newRotation;
+                            data.startTime = Time.time;
+
+                            _movementData[update.instanceKey] = data;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void ProcessStateUpdates(KeyframeData keyframe)
+    {
+        if (_useKeyframeInterpolation)
+        {
+            ProcessStateUpdatesForInterpolation(keyframe);
+        } else
+        {
+            ProcessStateUpdatesImmediate(keyframe);
+        }
+
+    }
+
+    private void UpdateForInterpolatedStateUpdates()
+    {
+        // Use a list to keep track of keys to remove after processing
+        List<int> keysToRemove = new List<int>();
+
+        foreach (var kvp in _instanceDictionary)
+        {
+            int instanceKey = kvp.Key;
+            GameObject instance = kvp.Value;
+
+            if (_movementData.ContainsKey(instanceKey))
+            {
+                var data = _movementData[instanceKey];
+                float t = (Time.time - data.startTime) / _keyframeInterval;
+
+                if (t < 1.0f)
+                {
+                    instance.transform.position = Vector3.Lerp(data.startPosition, data.endPosition, t);
+                    instance.transform.rotation = Quaternion.Slerp(data.startRotation, data.endRotation, t);
+                }
+                else
+                {
+                    instance.transform.position = data.endPosition;
+                    instance.transform.rotation = data.endRotation;
+
+                    // Mark this key for removal
+                    keysToRemove.Add(instanceKey);
+                }
+            }
+        }
+
+        // Remove processed keys from _movementData
+        foreach (var key in keysToRemove)
+        {
+            _movementData.Remove(key);
+        }
+
+    }
+    private void Update()
+    {
+        if (_useKeyframeInterpolation)
+        {
+            UpdateForInterpolatedStateUpdates();
+        }
+    }
+
     public void ProcessKeyframe(KeyframeData keyframe)
     {
         // Handle Loads
@@ -123,23 +277,8 @@ public class GfxReplayPlayer : MonoBehaviour
             Debug.Log($"Processed {keyframe.creations.Length} creations!");
         }
 
-        // Handle State Updates
-        if (keyframe.stateUpdates != null)
-        {
-            foreach (var update in keyframe.stateUpdates)
-            {
-                if (_instanceDictionary.ContainsKey(update.instanceKey))
-                {
-                    GameObject instance = _instanceDictionary[update.instanceKey];
+        ProcessStateUpdates(keyframe);
 
-                    Vector3 translation = CoordinateConventionHelper.ToUnityVector(update.state.absTransform.translation);
-                    Quaternion rotation = CoordinateConventionHelper.ToUnityQuaternion(update.state.absTransform.rotation);
-
-                    instance.transform.position = translation;
-                    instance.transform.rotation = rotation;
-                }
-            }
-        }
 
         // Handle Deletions
         if (keyframe.deletions != null)
