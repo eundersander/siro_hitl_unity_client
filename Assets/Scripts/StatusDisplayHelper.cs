@@ -1,11 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
-using UnityEditor.EditorTools;
 using UnityEngine;
 
-public class NetworkStatusManager : MonoBehaviour
+public class StatusDisplayHelper : MonoBehaviour
 {
     const float UI_GAZE_FOLLOWING_SPEED = 10.0f;
 
