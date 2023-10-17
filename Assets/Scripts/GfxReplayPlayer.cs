@@ -45,7 +45,8 @@ public class GfxReplayPlayer : MonoBehaviour
     public void SetKeyframeRate(float rate)
     {
         Assert.IsTrue(rate > 0.0F);
-        _keyframeInterval = 1.0F / rate;
+        float adjustedRate = Mathf.Clamp(rate, 10, 30);
+        _keyframeInterval = 1.0F / adjustedRate;
     }
 
     // simplify "path/abc/../to/file" to "path/to/file"
