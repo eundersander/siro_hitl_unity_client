@@ -82,6 +82,8 @@ public class Message
     public Highlight[] highlights;
 
     public List<float> teleportAvatarBasePosition;
+
+    public bool episodeChanged;
 }
 
 [Serializable]

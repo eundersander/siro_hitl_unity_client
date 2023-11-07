@@ -23,6 +23,7 @@ public class GfxReplayPlayer : MonoBehaviour
 
     HighlightManager _highlightManager;
     AvatarPositionHandler _avatarPositionHandler;
+    StatusDisplayHelper _statusDisplayHelper;
 
     private Dictionary<int, MovementData> _movementData = new Dictionary<int, MovementData>();
     private float _keyframeInterval = 0.1f;  // assume 10Hz, but see also SetKeyframeRate
@@ -39,6 +40,11 @@ public class GfxReplayPlayer : MonoBehaviour
         if (_avatarPositionHandler == null)
         {
             Debug.LogWarning($"Avatar position handler missing from '{name}'. Avatar position updates will be ignored.");
+        }
+        _statusDisplayHelper = GetComponent<StatusDisplayHelper>();
+        if (_statusDisplayHelper == null)
+        {
+            Debug.LogWarning($"Status display helper missing from '{name}'. Status updates will be ignored.");
         }
     }
 
@@ -234,6 +240,12 @@ public class GfxReplayPlayer : MonoBehaviour
 
     public void ProcessKeyframe(KeyframeData keyframe)
     {
+        // If the episode is changing, show an indicator.
+        if (_statusDisplayHelper != null && keyframe.message != null && keyframe.message.episodeChanged)
+        {
+            _statusDisplayHelper.OnEpisodeChanged();
+        }
+
         // Handle Loads
         if (keyframe.loads != null)
         {
