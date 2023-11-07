@@ -83,7 +83,7 @@ public class Message
 
     public List<float> teleportAvatarBasePosition;
 
-    public bool episodeChanged;
+    public bool sceneChanged;
 }
 
 [Serializable]

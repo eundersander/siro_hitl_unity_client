@@ -87,7 +87,7 @@ public class StatusDisplayHelper : MonoBehaviour
         RenderSettings.ambientLight = _ambientColor;
     }
 
-    public void OnEpisodeChanged()
+    public void OnSceneChanged()
     {
         RenderSettings.fog = true;
         RenderSettings.fogDensity = 1.0f;

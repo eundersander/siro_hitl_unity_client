@@ -241,9 +241,9 @@ public class GfxReplayPlayer : MonoBehaviour
     public void ProcessKeyframe(KeyframeData keyframe)
     {
         // If the episode is changing, show an indicator.
-        if (_statusDisplayHelper != null && keyframe.message != null && keyframe.message.episodeChanged)
+        if (_statusDisplayHelper != null && keyframe.message != null && keyframe.message.sceneChanged)
         {
-            _statusDisplayHelper.OnEpisodeChanged();
+            _statusDisplayHelper.OnSceneChanged();
         }
 
         // Handle Loads
