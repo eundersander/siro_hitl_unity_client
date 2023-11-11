@@ -23,6 +23,7 @@ public class GfxReplayPlayer : MonoBehaviour
     HighlightManager _highlightManager;
     AvatarPositionHandler _avatarPositionHandler;
     StatusDisplayHelper _statusDisplayHelper;
+    NavmeshHelper _navmeshHelper;
 
     private Dictionary<int, MovementData> _movementData = new Dictionary<int, MovementData>();
     private float _keyframeInterval = 0.1f;  // assume 10Hz, but see also SetKeyframeRate
@@ -44,6 +45,11 @@ public class GfxReplayPlayer : MonoBehaviour
         if (_statusDisplayHelper == null)
         {
             Debug.LogWarning($"Status display helper missing from '{name}'. Status updates will be ignored.");
+        }
+        _navmeshHelper = GameObject.FindObjectOfType<NavmeshHelper>();
+        if (!_navmeshHelper)
+        {
+            Debug.LogWarning($"Couldn't find a NavmeshHelper. Navmesh updates will be ignored.");
         }
     }
 
@@ -237,6 +243,32 @@ public class GfxReplayPlayer : MonoBehaviour
         }
     }
 
+    private void ProcessKeyframeMessage(Message message)
+    {
+        if (_navmeshHelper != null && message.navmeshVertices != null && message.navmeshVertices.Count > 0)
+        {
+            if (message.navmeshVertices.Count % 9 != 0)
+            {
+                Debug.LogError($"Ignoring keyframe.message.navmeshVertices with Count == {message.navmeshVertices.Count}. Length should be a multiple of 9.");
+            }
+            else
+            {
+                // convert to Vector3[]
+                Vector3[] vectorArray = new Vector3[message.navmeshVertices.Count / 3];
+                for (int i = 0; i < message.navmeshVertices.Count; i += 3)
+                {
+                    vectorArray[i / 3] = CoordinateConventionHelper.ToUnityVector(message.navmeshVertices[i], message.navmeshVertices[i + 1], message.navmeshVertices[i + 2]);
+                }
+
+                // it's too error-prone to expect the server to know the
+                // correct winding order for Unity raycasts, so let's do
+                // double-sided.
+                bool doDoublesided = true;
+                _navmeshHelper.UpdateNavmesh(vectorArray, doDoublesided);
+            }
+        }
+    }
+
     public void ProcessKeyframe(KeyframeData keyframe)
     {
         // Handle messages
@@ -251,6 +283,10 @@ public class GfxReplayPlayer : MonoBehaviour
         if (_statusDisplayHelper != null && keyframe.message != null && keyframe.message.sceneChanged)
         {
             _statusDisplayHelper.OnSceneChangeBegin();
+        }
+        if (keyframe.message != null)
+        {
+            ProcessKeyframeMessage(keyframe.message);
         }
 
         // Handle Loads
