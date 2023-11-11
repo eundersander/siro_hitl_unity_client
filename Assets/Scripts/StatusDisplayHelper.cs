@@ -24,6 +24,10 @@ public class StatusDisplayHelper : MonoBehaviour
 
     Transform _iconTargetTransform;
 
+
+    Coroutine _networkStatusIconCoroutine = null;
+    Coroutine _sceneChangeCoroutine = null;
+
     void Awake()
     {
         offlineIcon.SetActive(false);
@@ -75,7 +79,12 @@ public class StatusDisplayHelper : MonoBehaviour
 
     void OnConnectionLost()
     {
-        StartCoroutine(ShowElementForDuration(offlineIcon, offlineIconDisplayTime));
+        if (_networkStatusIconCoroutine != null)
+        {
+            StopCoroutine(_networkStatusIconCoroutine);
+        }
+        _networkStatusIconCoroutine = StartCoroutine(ShowElementForDuration(offlineIcon, offlineIconDisplayTime));
+        
         RenderSettings.ambientLight = Color.red;
         offlineIcon.transform.position = _iconTargetTransform.position;
         offlineIcon.transform.rotation = _iconTargetTransform.rotation;
@@ -87,11 +96,20 @@ public class StatusDisplayHelper : MonoBehaviour
         RenderSettings.ambientLight = _ambientColor;
     }
 
-    public void OnSceneChanged()
+    public void OnSceneChangeBegin()
     {
         RenderSettings.fog = true;
         RenderSettings.fogDensity = 1.0f;
-        StartCoroutine(LerpRemoveFog(0.75f));
+
+        if (_sceneChangeCoroutine != null)
+        {
+            StopCoroutine(_sceneChangeCoroutine);
+        }
+    }
+
+    public void OnSceneChangeEnd()
+    {
+        _sceneChangeCoroutine = StartCoroutine(LerpRemoveFog(0.75f));
     }
 
     IEnumerator ShowElementForDuration(GameObject o, float time)
