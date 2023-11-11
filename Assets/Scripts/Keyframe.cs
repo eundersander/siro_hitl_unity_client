@@ -82,6 +82,9 @@ public class Message
     public Highlight[] highlights;
 
     public List<float> teleportAvatarBasePosition;
+
+    // nonindexed triangle list, serialized as a flat list of floats
+    public List<float> navmeshVertices;
 }
 
 [Serializable]

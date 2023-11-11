@@ -117,6 +117,14 @@ public class CoordinateConventionHelper
     private static Quaternion _defaultRotation = Quaternion.Euler(0, 180, 0);
     private static Quaternion _invDefaultRotation = Quaternion.Inverse(_defaultRotation);
 
+    public static Vector3 ToUnityVector(float x, float y, float z)
+    {
+        return new Vector3(
+            x,
+            y,
+            -z
+        );
+    }
 
     public static Vector3 ToUnityVector(List<float> translation)
     {
