@@ -19,10 +19,10 @@ public class GfxReplayPlayer : MonoBehaviour
 
     private Dictionary<int, GameObject> _instanceDictionary = new Dictionary<int, GameObject>();
     private Dictionary<string, Load> _loadDictionary = new Dictionary<string, Load>();
-    private Quaternion _defaultRotation = Quaternion.Euler(0, 180, 0);
 
     HighlightManager _highlightManager;
     AvatarPositionHandler _avatarPositionHandler;
+    StatusDisplayHelper _statusDisplayHelper;
     NavmeshHelper _navmeshHelper;
 
     private Dictionary<int, MovementData> _movementData = new Dictionary<int, MovementData>();
@@ -41,7 +41,11 @@ public class GfxReplayPlayer : MonoBehaviour
         {
             Debug.LogWarning($"Avatar position handler missing from '{name}'. Avatar position updates will be ignored.");
         }
-
+        _statusDisplayHelper = GetComponent<StatusDisplayHelper>();
+        if (_statusDisplayHelper == null)
+        {
+            Debug.LogWarning($"Status display helper missing from '{name}'. Status updates will be ignored.");
+        }
         _navmeshHelper = GameObject.FindObjectOfType<NavmeshHelper>();
         if (!_navmeshHelper)
         {
@@ -267,6 +271,19 @@ public class GfxReplayPlayer : MonoBehaviour
 
     public void ProcessKeyframe(KeyframeData keyframe)
     {
+        // Handle messages
+        if (_highlightManager)
+        {
+            _highlightManager.ProcessKeyframe(keyframe);
+        }
+        if (_avatarPositionHandler)
+        {
+            _avatarPositionHandler.ProcessKeyframe(keyframe);
+        }
+        if (_statusDisplayHelper != null && keyframe.message != null && keyframe.message.sceneChanged)
+        {
+            _statusDisplayHelper.OnSceneChangeBegin();
+        }
         if (keyframe.message != null)
         {
             ProcessKeyframeMessage(keyframe.message);
@@ -318,7 +335,6 @@ public class GfxReplayPlayer : MonoBehaviour
 
         ProcessStateUpdates(keyframe);
 
-
         // Handle Deletions
         if (keyframe.deletions != null)
         {
@@ -330,18 +346,23 @@ public class GfxReplayPlayer : MonoBehaviour
                     _instanceDictionary.Remove(key);
                 }
             }
-            StartCoroutine("ReleaseUnusedMemory");
+            StartCoroutine(ReleaseUnusedMemory(
+                // Wait for memory clean-up to be finished before executing KeyframePostUpdate()
+                () => {KeyframePostUpdate(keyframe);})
+            );
             Debug.Log($"Processed {keyframe.deletions.Length} deletions!");
         }
-
-        // Handle message
-        if (_highlightManager)
+        else
         {
-            _highlightManager.ProcessKeyframe(keyframe);
+            KeyframePostUpdate(keyframe);
         }
-        if (_avatarPositionHandler)
+    }
+
+    void KeyframePostUpdate(KeyframeData keyframe)
+    {
+        if (_statusDisplayHelper != null && keyframe.message != null && keyframe.message.sceneChanged)
         {
-            _avatarPositionHandler.ProcessKeyframe(keyframe);
+            _statusDisplayHelper.OnSceneChangeEnd();
         }
     }
 
@@ -351,17 +372,37 @@ public class GfxReplayPlayer : MonoBehaviour
         {
             Destroy(kvp.Value);
         }
-        StartCoroutine("ReleaseUnusedMemory");
+        StartCoroutine(ReleaseUnusedMemory());
         Debug.Log($"Deleted all {_instanceDictionary.Count} instances!");
         _instanceDictionary.Clear();
     }
 
-    IEnumerator ReleaseUnusedMemory()
+    /// <summary>
+    /// Unloads the unused resources from GPU and CPU memory.
+    /// This is normally done automatically when changing scene.
+    /// We must call this manually to avoid leaks because we are never changing scene.
+    /// This is a slow operation - use the callback to execute code after this is done.
+    /// </summary>
+    /// <param name="callback">Code to execute when this is done.</param>
+    /// <returns></returns>
+    IEnumerator ReleaseUnusedMemory(Action callback = null)
     {
         // Wait for objects to be destroyed.
         yield return new WaitForEndOfFrame();
 
-        Resources.UnloadUnusedAssets();
-        GC.Collect();
+        // Unload unused assets.
+        var asyncOp = Resources.UnloadUnusedAssets();
+
+        // Wait for the operation to be done.
+        while (!asyncOp.isDone)
+        {
+            yield return null;
+        }
+
+        // Invoke callback.
+        if (callback != null)
+        {
+            callback.Invoke();
+        }
     }
 }

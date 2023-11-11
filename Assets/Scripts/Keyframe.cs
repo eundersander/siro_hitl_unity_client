@@ -83,6 +83,7 @@ public class Message
 
     public List<float> teleportAvatarBasePosition;
 
+    public bool sceneChanged;
     // nonindexed triangle list, serialized as a flat list of floats
     public List<float> navmeshVertices;
 }

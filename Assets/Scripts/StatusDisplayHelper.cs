@@ -24,6 +24,10 @@ public class StatusDisplayHelper : MonoBehaviour
 
     Transform _iconTargetTransform;
 
+
+    Coroutine _networkStatusIconCoroutine = null;
+    Coroutine _sceneChangeCoroutine = null;
+
     void Awake()
     {
         offlineIcon.SetActive(false);
@@ -34,6 +38,12 @@ public class StatusDisplayHelper : MonoBehaviour
         }
         _ambientColor = RenderSettings.ambientLight;
         _iconTargetTransform = new GameObject("Icon target transform").transform;
+
+        // Initialize fog
+        RenderSettings.fogMode = FogMode.ExponentialSquared;
+        RenderSettings.fogColor = Color.black;
+        RenderSettings.fog = false;
+        RenderSettings.fogDensity = 0.0f;
     }
 
     void Update()
@@ -69,7 +79,12 @@ public class StatusDisplayHelper : MonoBehaviour
 
     void OnConnectionLost()
     {
-        StartCoroutine(ShowElementForDuration(offlineIcon, offlineIconDisplayTime));
+        if (_networkStatusIconCoroutine != null)
+        {
+            StopCoroutine(_networkStatusIconCoroutine);
+        }
+        _networkStatusIconCoroutine = StartCoroutine(ShowElementForDuration(offlineIcon, offlineIconDisplayTime));
+        
         RenderSettings.ambientLight = Color.red;
         offlineIcon.transform.position = _iconTargetTransform.position;
         offlineIcon.transform.rotation = _iconTargetTransform.rotation;
@@ -81,10 +96,43 @@ public class StatusDisplayHelper : MonoBehaviour
         RenderSettings.ambientLight = _ambientColor;
     }
 
+    public void OnSceneChangeBegin()
+    {
+        RenderSettings.fog = true;
+        RenderSettings.fogDensity = 1.0f;
+
+        if (_sceneChangeCoroutine != null)
+        {
+            StopCoroutine(_sceneChangeCoroutine);
+        }
+    }
+
+    public void OnSceneChangeEnd()
+    {
+        _sceneChangeCoroutine = StartCoroutine(LerpRemoveFog(0.75f));
+    }
+
     IEnumerator ShowElementForDuration(GameObject o, float time)
     {
         o.SetActive(true);
         yield return new WaitForSeconds(time);
         o.SetActive(false);
+    }
+
+    IEnumerator LerpRemoveFog(float duration)
+    {
+        float initialFogDensity = RenderSettings.fogDensity;
+        float elapsedTime = 0.0f;
+
+        while (elapsedTime < duration)
+        {
+            float fogDensity = Mathf.Lerp(initialFogDensity, 0.0f, elapsedTime / duration);
+            RenderSettings.fogDensity = fogDensity;
+
+            elapsedTime += Time.deltaTime;
+            yield return null; // Skip one frame
+        }
+
+        RenderSettings.fog = false;
     }
 }
