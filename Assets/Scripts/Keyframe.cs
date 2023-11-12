@@ -86,6 +86,8 @@ public class Message
     public bool sceneChanged;
     // nonindexed triangle list, serialized as a flat list of floats
     public List<float> navmeshVertices;
+
+    public string textMessage;
 }
 
 [Serializable]

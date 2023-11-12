@@ -24,6 +24,7 @@ public class GfxReplayPlayer : MonoBehaviour
     AvatarPositionHandler _avatarPositionHandler;
     StatusDisplayHelper _statusDisplayHelper;
     NavmeshHelper _navmeshHelper;
+    TextRenderer _textRenderer;
 
     private Dictionary<int, MovementData> _movementData = new Dictionary<int, MovementData>();
     private float _keyframeInterval = 0.1f;  // assume 10Hz, but see also SetKeyframeRate
@@ -50,6 +51,11 @@ public class GfxReplayPlayer : MonoBehaviour
         if (!_navmeshHelper)
         {
             Debug.LogWarning($"Couldn't find a NavmeshHelper. Navmesh updates will be ignored.");
+        }
+        _textRenderer = GetComponent<TextRenderer>();
+        if (_textRenderer == null)
+        {
+            Debug.LogWarning($"Text renderer missing from '{name}'. Text messages won't be displayed.");
         }
     }
 
@@ -267,6 +273,11 @@ public class GfxReplayPlayer : MonoBehaviour
                 _navmeshHelper.UpdateNavmesh(vectorArray, doDoublesided);
             }
         }
+        if (_textRenderer != null)
+        {
+            _textRenderer.SetText(message.textMessage);
+        }
+        
     }
 
     public void ProcessKeyframe(KeyframeData keyframe)
