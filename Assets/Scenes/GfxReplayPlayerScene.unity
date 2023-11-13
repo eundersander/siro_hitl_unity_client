@@ -559,7 +559,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _mouseoverForTooltip: 0
   defaultServerLocations:
-  - 192.168.0.23:8888
+  - 127.0.0.1
   - 127.0.0.1:8888
 --- !u!114 &695650938
 MonoBehaviour:
