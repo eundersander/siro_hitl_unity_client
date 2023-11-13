@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using TMPro;
-using Unity.Tutorials.Core.Editor;
 using UnityEngine;
 
 public class TextRenderer : MonoBehaviour
@@ -44,7 +43,7 @@ public class TextRenderer : MonoBehaviour
     {
         if (!enabled) return;
 
-        textPanelRoot.SetActive(!text.IsNullOrEmpty());
+        textPanelRoot.SetActive(string.IsNullOrEmpty(text));
         textComponent.text = text;
     }
 }
