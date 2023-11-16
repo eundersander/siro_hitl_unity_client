@@ -109,7 +109,7 @@ public class StatusDisplayHelper : MonoBehaviour
 
     public void OnSceneChangeEnd()
     {
-        _sceneChangeCoroutine = StartCoroutine(LerpRemoveFog(0.75f));
+        _sceneChangeCoroutine = StartCoroutine(ProgressivelyRemoveFog(0.75f));
     }
 
     IEnumerator ShowElementForDuration(GameObject o, float time)
@@ -119,14 +119,15 @@ public class StatusDisplayHelper : MonoBehaviour
         o.SetActive(false);
     }
 
-    IEnumerator LerpRemoveFog(float duration)
+    IEnumerator ProgressivelyRemoveFog(float duration)
     {
         float initialFogDensity = RenderSettings.fogDensity;
         float elapsedTime = 0.0f;
 
         while (elapsedTime < duration)
         {
-            float fogDensity = Mathf.Lerp(initialFogDensity, 0.0f, elapsedTime / duration);
+            float t = EaseInCubic(elapsedTime / duration);
+            float fogDensity = Mathf.Lerp(initialFogDensity, 0.0f, t);
             RenderSettings.fogDensity = fogDensity;
 
             elapsedTime += Time.deltaTime;
@@ -134,5 +135,9 @@ public class StatusDisplayHelper : MonoBehaviour
         }
 
         RenderSettings.fog = false;
+    }
+
+    float EaseInCubic(float x) {
+        return x * x * x;
     }
 }
