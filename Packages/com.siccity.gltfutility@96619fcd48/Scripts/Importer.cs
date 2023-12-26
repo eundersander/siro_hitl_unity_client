@@ -126,6 +126,21 @@ namespace Siccity.GLTFUtility {
 			reader.Read(jsonChars, 0, (int) chunkLength);
 			string json = new string(jsonChars);
 
+			// HACK: Some asset may include the padding in "chunkLength".
+			// The padding characters cause the JSON parser to fail.
+			// Here, we search for the final "}" within the padding window and remove the padding characters.
+			// See https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#chunks
+			uint paddingSize = 0u;
+			while (!json.EndsWith('}')) {
+				json = json[..^1];
+				++paddingSize;
+				if (paddingSize > 3) {
+					Debug.LogError("Invalid JSON chunk in GLB file.");
+					binChunkStart = 0;
+					return null;
+				}
+			}
+
 			// Chunk
 			binChunkStart = chunkLength + 20;
 			stream.Close();
