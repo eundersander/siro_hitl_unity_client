@@ -2,7 +2,7 @@
 
 This application is a VR client that can remotely control a human agent in Habitat, in a human-in-the-loop (HITL) evaluation context.
 
-See [this document](https://github.com/facebookresearch/habitat-lab/blob/main/examples/siro_sandbox/VR_HITL.md) for setting up the server.
+See [this document](https://github.com/facebookresearch/habitat-lab/blob/main/examples/siro_sandbox/VR_HITL.md) for setting up the server. This is a "thin client", with most application complexity residing on the server. However, the client can be tested alone (without the server) as a simple model viewer, and we recommend this as a sanity check before running the full client/server application. See local testing instructions below.
 
 ![Screenshot](https://github.com/eundersander/siro_hitl_unity_client/assets/6557808/5aac5731-a7eb-4f0d-876c-871b330f6677)
 *Screenshot of the Unity Editor (left) running on a dev machine, with VR emulation, alongside the HITL server (right). The VR headset and controller poses are visualized at right as a view frustum (white lines) and red/blue boxes.*
@@ -46,14 +46,14 @@ In this step, you'll view an HSSD stage model, get familiar with the Unity Edito
 7. In the Hierarchy pane, find `106879104_174887235` (the object you added earlier). Delete it.
 
 ## Testing on a Quest VR headset
-In this step, we'll view the same HSSD scene on the Quest VR headset. No HITL server is required for this.
+In this step, we'll view the same HSSD stage on the Quest VR headset. No HITL server is required for this.
 
 1. Quest is an Android device. Open Menu bar > Build Settings. From the platform list, select "Android". Click "Switch Platform" and wait a minute for the Editor to switch platforms.
 2. Plug in your Quest to your dev machine via USB. Ensure Developer Mode. You may need to install ADB or other Android Dev tools (anecdotally, this isn't required on Mac).
 3. Still in the Build Settings window, next to "Run Device", click "Refresh", then look for your specific device in the dropdown menu. Select it.
 4. Click "Build and Run" and ensure this completes without error. If you're prompted for a build save location, just choose `build.apk` in the project root folder.
 5. Put on your headset. The app may already be running. If not, or if you encounter issues, hit the Quest home button and it should let you quit the `siro_hitl_vr_client` program. After you quit, you can usually find the icon for the program in your list of recently-run programs. You should re-launch it.
-6. When in the scene, press and hold forward on either VR controller thumbstick to aim for a teleportation destination, then release the thumbstick to teleport.
+6. When in the scene, press and hold forward on the right VR controller thumbstick to aim for a teleportation destination, then release the thumbstick to teleport.
 
 See [these troubleshooting steps](#deployment-to-the-vr-headset) if you have issues deploying the client to your VR device.
 
@@ -72,7 +72,7 @@ Assets for the Habitat client aren't included in the Unity project (aside from a
 * When connecting your headset to your development computer via USB, a pop-up will ask you to confirm the connection within the VR headset.
   * If the pop-up doesn't show up, reconnect your USB cable.
   * You may also have to re-do this after the headset goes into sleep mode.
-* Deployment occasionally fails when the application is already installed. You can delete the old build from the Quest storage menu. The following error will often show in Unity when that occurs:
+* Deployment occasionally fails when the application is already installed. You can delete the old build from the Quest storage menu (find it under 'unknown sources'). The following error will often show in Unity when that occurs:
 ```
 CommandInvokationFailure: Unable to install APK to device. Please make sure the Android SDK is installed and is properly configured in the Editor. See the Console for more details.
 /home/user/Unity/Hub/Editor/2022.3.7f1/Editor/Data/PlaybackEngines/AndroidPlayer/SDK/platform-tools/adb -s "4G3YA1ZF571D4D" install -r -d "/home/user/git/siro_hitl_unity_client/Build/build.apk"
