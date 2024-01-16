@@ -2,7 +2,7 @@
 
 This application is a VR client that can remotely control a human agent in Habitat, in a human-in-the-loop (HITL) evaluation context.
 
-See [this document](https://github.com/facebookresearch/habitat-lab/blob/main/examples/siro_sandbox/VR_HITL.md) for setting up the server. This is a "thin client", with most application complexity residing on the server. However, the client can be tested alone (without the server) as a simple model viewer, and we recommend this as a sanity check before running the full client/server application. See local testing instructions below.
+See [this document](https://github.com/facebookresearch/habitat-lab/blob/main/examples/hitl/pick_throw_vr/README.md#vr) for setting up the server. This is a "thin client", with most application complexity residing on the server. However, the client can be tested alone (without the server) as a simple model viewer, and we recommend this as a sanity check before running the full client/server application. See local testing instructions below.
 
 ![Screenshot](https://github.com/eundersander/siro_hitl_unity_client/assets/6557808/5aac5731-a7eb-4f0d-876c-871b330f6677)
 *Screenshot of the Unity Editor (left) running on a dev machine, with VR emulation, alongside the HITL server (right). The VR headset and controller poses are visualized at right as a view frustum (white lines) and red/blue boxes.*
@@ -58,12 +58,12 @@ In this step, we'll view the same HSSD stage on the Quest VR headset. No HITL se
 See [these troubleshooting steps](#deployment-to-the-vr-headset) if you have issues deploying the client to your VR device.
 
 ## Testing with the HITL server
-[This document](https://github.com/facebookresearch/habitat-lab/blob/main/examples/siro_sandbox/VR_HITL.md) contains complete information for setting up the server.
+[This document](https://github.com/facebookresearch/habitat-lab/blob/main/examples/hitl/pick_throw_vr/README.md#vr) contains complete information for setting up the server.
 
 ### Installing external Habitat data
 The `Assets/Resources/data` folder is a subset of the Habitat `data/` folder. When the Habitat server indicates that a file must be loaded, the Unity client will look for an asset with the same name within its own data folder.
 
-Assets for the Habitat client aren't included in the Unity project (aside from a test asset in `Assets/temp/`). They must be imported separately. These are built using a special pipeline defined [here](https://github.com/facebookresearch/habitat-lab/blob/main/examples/siro_sandbox/VR_HITL.md#dataset-processing).
+Assets for the Habitat client aren't included in the Unity project (aside from a test asset in `Assets/temp/`). They must be imported separately. These are built using a special pipeline defined [here](https://github.com/facebookresearch/habitat-lab/blob/main/examples/hitl/pick_throw_vr/README.md#dataset-processing).
 
 ## Troubleshooting
 ### Deployment to the VR Headset
