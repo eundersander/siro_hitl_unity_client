@@ -1,6 +1,4 @@
 using UnityEngine;
-using System.IO;
-using UnityEngine.Assertions;
 
 public class ConfigLoader : MonoBehaviour
 {
