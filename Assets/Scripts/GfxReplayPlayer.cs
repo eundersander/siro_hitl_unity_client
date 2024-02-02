@@ -129,8 +129,8 @@ public class GfxReplayPlayer : MonoBehaviour
                 {
                     GameObject instance = _instanceDictionary[update.instanceKey];
 
-                    Vector3 translation = CoordinateConventionHelper.ToUnityVector(update.state.absTransform.translation);
-                    Quaternion rotation = CoordinateConventionHelper.ToUnityQuaternion(update.state.absTransform.rotation);
+                    Vector3 translation = CoordinateSystem.ToUnityVector(update.state.absTransform.translation);
+                    Quaternion rotation = CoordinateSystem.ToUnityQuaternion(update.state.absTransform.rotation);
 
                     instance.transform.position = translation;
                     instance.transform.rotation = rotation;
@@ -149,8 +149,8 @@ public class GfxReplayPlayer : MonoBehaviour
                 {
                     GameObject instance = _instanceDictionary[update.instanceKey];
 
-                    Vector3 newTranslation = CoordinateConventionHelper.ToUnityVector(update.state.absTransform.translation);
-                    Quaternion newRotation = CoordinateConventionHelper.ToUnityQuaternion(update.state.absTransform.rotation);
+                    Vector3 newTranslation = CoordinateSystem.ToUnityVector(update.state.absTransform.translation);
+                    Quaternion newRotation = CoordinateSystem.ToUnityQuaternion(update.state.absTransform.rotation);
 
                     // Check if the instance is at the origin
                     if (instance.transform.position == Vector3.zero)
@@ -263,7 +263,7 @@ public class GfxReplayPlayer : MonoBehaviour
                 Vector3[] vectorArray = new Vector3[message.navmeshVertices.Count / 3];
                 for (int i = 0; i < message.navmeshVertices.Count; i += 3)
                 {
-                    vectorArray[i / 3] = CoordinateConventionHelper.ToUnityVector(message.navmeshVertices[i], message.navmeshVertices[i + 1], message.navmeshVertices[i + 2]);
+                    vectorArray[i / 3] = CoordinateSystem.ToUnityVector(message.navmeshVertices[i], message.navmeshVertices[i + 1], message.navmeshVertices[i + 2]);
                 }
 
                 // it's too error-prone to expect the server to know the

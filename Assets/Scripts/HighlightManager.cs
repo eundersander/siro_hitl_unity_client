@@ -81,7 +81,7 @@ public class HighlightManager : MonoBehaviour
                 highlight.enabled = true;
 
                 // Apply translation from message
-                Vector3 center = CoordinateConventionHelper.ToUnityVector(highlightsMessage[i].t);
+                Vector3 center = CoordinateSystem.ToUnityVector(highlightsMessage[i].t);
                 highlight.transform.position = center;
 
                 // Billboarding

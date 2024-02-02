@@ -91,12 +91,12 @@ public class XRInputHelper
         }
     }
 
-    private void LeftActivateCallback(UnityEngine.InputSystem.InputAction.CallbackContext obj)
+    private void LeftActivateCallback(InputAction.CallbackContext obj)
     {
         ButtonPressReleaseCallback(0, obj.performed);
     }
 
-    private void LeftSelectCallback(UnityEngine.InputSystem.InputAction.CallbackContext obj)
+    private void LeftSelectCallback(InputAction.CallbackContext obj)
     {
         ButtonPressReleaseCallback(1, obj.performed);
     }
@@ -112,66 +112,6 @@ public class XRInputHelper
     }
 }
 
-public class CoordinateConventionHelper
-{
-    private static Quaternion _defaultRotation = Quaternion.Euler(0, 180, 0);
-    private static Quaternion _invDefaultRotation = Quaternion.Inverse(_defaultRotation);
-
-    public static Vector3 ToUnityVector(float x, float y, float z)
-    {
-        return new Vector3(
-            x,
-            y,
-            -z
-        );
-    }
-
-    public static Vector3 ToUnityVector(List<float> translation)
-    {
-        return new Vector3(
-            translation[0],
-            translation[1],
-            -translation[2]
-        );
-    }
-
-    public static Quaternion ToUnityQuaternion(List<float> rotation)
-    {
-        Quaternion newRot = new Quaternion(
-            rotation[1],
-            -rotation[2],
-            -rotation[3],
-            rotation[0]
-        );
-
-        newRot = _defaultRotation * newRot;
-        return newRot;
-    }
-
-    public static List<float> ToHabitatVector(Vector3 translation)
-    {
-        return new List<float>
-        {
-            translation.x,
-            translation.y,
-            -translation.z
-        };
-    }
-
-    public static List<float> ToHabitatQuaternion(Quaternion rotation)
-    {
-        Quaternion convertedRotation = _invDefaultRotation * rotation;
-
-        return new List<float>
-        {
-            convertedRotation.w,
-            convertedRotation.x,
-            -convertedRotation.y,
-            -convertedRotation.z
-        };
-    }
-}
-
 [System.Serializable]
 public class AvatarData
 {
@@ -183,7 +123,7 @@ public class AvatarData
     };
 }
 
-[System.Serializable]
+[Serializable]
 public class PoseData
 {
     public List<float> position = new List<float>(3);
@@ -191,8 +131,8 @@ public class PoseData
 
     public void FromGameObject(GameObject gameObject)
     {
-        position = CoordinateConventionHelper.ToHabitatVector(gameObject.transform.position);
-        rotation = CoordinateConventionHelper.ToHabitatQuaternion(gameObject.transform.rotation);
+        position = CoordinateSystem.ToHabitatVector(gameObject.transform.position);
+        rotation = CoordinateSystem.ToHabitatQuaternion(gameObject.transform.rotation);
     }
 }
 

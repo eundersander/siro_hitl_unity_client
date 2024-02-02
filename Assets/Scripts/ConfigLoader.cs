@@ -12,7 +12,7 @@ public class ConfigLoader : MonoBehaviour
     }
 
     [Header("Config Defaults")]
-    [Tooltip("Config defaults are used directly when runing in the Editor. On device, they are used to populate config.txt at Android/data/com.meta.siro_hitl_vr_client/files/. This file persists and can be edited between runs, e.g. by connecting via USB to a laptop.")]
+    [Tooltip("Config defaults are used directly when running in the Editor. On device, they are used to populate config.txt at Android/data/com.meta.siro_hitl_vr_client/files/. This file persists and can be edited between runs, e.g. by connecting via USB to a laptop.")]
     [SerializeField]
     private bool _mouseoverForTooltip;  // dummy member so we can add tooltip in Inspector pane
     [Space(10)] // Add a little spacing for clarity

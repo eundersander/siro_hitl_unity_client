@@ -17,7 +17,7 @@ public class AvatarPositionHandler : MonoBehaviour
         var avatarPosition = keyframe?.message.teleportAvatarBasePosition;
         if (avatarPosition != null && avatarPosition.Count == 3)
         {
-            Vector3 newPosition = CoordinateConventionHelper.ToUnityVector(avatarPosition);
+            Vector3 newPosition = CoordinateSystem.ToUnityVector(avatarPosition);
 
             Vector3 delta = newPosition - xrCameraNode.transform.position;
 
