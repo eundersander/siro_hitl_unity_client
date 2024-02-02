@@ -7,13 +7,6 @@ using UnityEngine.Windows;
 using System.Collections;
 using System.Threading.Tasks;
 
-[Serializable]
-public class ClientState
-{
-    public AvatarData avatar = new AvatarData();
-    public ButtonInputData input;
-}
-
 public class NetworkClient : MonoBehaviour
 {
     public class FlagObject
