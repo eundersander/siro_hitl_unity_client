@@ -41,7 +41,7 @@ public class NetworkClient : MonoBehaviour
     JsonSerializerSettings _jsonSettings = new JsonSerializerSettings
     {
         // Omit null values when serializing objects.
-        // E.g. XR-specific data will be omitted when XR is disabled.
+        // E.g. XR-specific fields will be omitted when XR is disabled.
         NullValueHandling = NullValueHandling.Ignore,
         // Skip missing JSON fields when deserializing.
         MissingMemberHandling = MissingMemberHandling.Ignore
