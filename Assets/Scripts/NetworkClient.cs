@@ -26,10 +26,6 @@ public class NetworkClient : MonoBehaviour
 
     public int defaultServerPort = 8888;
 
-    public GameObject vrHeadsetObject;
-    public GameObject vrLeftControllerObject;
-    public GameObject vrRightControllerObject;
-
     List<string> _serverURLs = new List<string>();
     private WebSocket mainWebSocket;
     private int currentServerIndex = 0;
@@ -40,7 +36,7 @@ public class NetworkClient : MonoBehaviour
     private ConfigLoader _configLoader;
 
     ClientState _clientState = new ClientState();
-    XRInputHelper _xrInputHelper;
+    InputTracker[] _inputTrackers;
 
     void Start()
     {
@@ -49,7 +45,11 @@ public class NetworkClient : MonoBehaviour
         _configLoader = GetComponent<ConfigLoader>();
         Assert.IsTrue(_configLoader);
 
-        _xrInputHelper = new XRInputHelper();
+        _inputTrackers = GetComponentsInChildren<InputTracker>();
+        if (_inputTrackers.Length == 0)
+        {
+            Debug.LogWarning("No InputTracker could be found. The client won't send any data to the server.");
+        }
 
         string[] serverLocations = _configLoader.AppConfig.serverLocations;
         Assert.IsTrue(serverLocations.Length > 0);
@@ -226,15 +226,15 @@ public class NetworkClient : MonoBehaviour
 
     void UpdateClientState()
     {
-        Assert.IsNotNull(vrHeadsetObject);
-        Assert.IsNotNull(vrLeftControllerObject);
-        Assert.IsNotNull(vrRightControllerObject);
+        if (_inputTrackers == null)
+        {
+            return;
+        }
 
-        _clientState.avatar.root.FromGameObject(vrHeadsetObject);
-        _clientState.avatar.hands[0].FromGameObject(vrLeftControllerObject);
-        _clientState.avatar.hands[1].FromGameObject(vrRightControllerObject);
-
-        _clientState.input = _xrInputHelper.UpdateInputData();
+        foreach (var updater in _inputTrackers)
+        {
+            updater.UpdateClientState(ref _clientState);
+        }
     }
 
     async void SendClientState()
@@ -243,9 +243,10 @@ public class NetworkClient : MonoBehaviour
         {
             UpdateClientState();
             string jsonStr = JsonUtility.ToJson(_clientState);
-
-            _xrInputHelper.OnEndFrame();
-                
+            foreach (var updater in _inputTrackers)
+            {
+                updater.OnEndFrame();
+            }
             await mainWebSocket.SendText(jsonStr);
         }
     }

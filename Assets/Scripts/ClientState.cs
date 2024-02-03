@@ -5,7 +5,7 @@ using UnityEngine;
 [Serializable]
 public class ClientState
 {
-    public AvatarData avatar = new AvatarData();
+    public AvatarData avatar;
     public ButtonInputData input;
 }
 

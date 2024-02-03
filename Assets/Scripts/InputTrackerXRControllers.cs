@@ -1,8 +1,6 @@
 using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.InputSystem;
-using UnityEngine.XR.Interaction.Toolkit.Inputs.Simulation;
 using UnityEngine.Assertions;
+using UnityEngine.InputSystem;
 
 public class BoolArrayHelper
 {
@@ -20,14 +18,14 @@ public class BoolArrayHelper
     }
 }
 
-public class XRInputHelper
+public class InputTrackerXRControllers : InputTracker
 {
     XRIDefaultInputActions _inputActions;
     ButtonInputData _inputData = new ButtonInputData();
     const int NUM_BUTTONS = 4;
     bool[] _buttonHeld = new bool[4];
 
-    public XRInputHelper()
+    void Awake()
     {
         for (int buttonId = 0; buttonId < NUM_BUTTONS; buttonId++)
         {
@@ -45,6 +43,25 @@ public class XRInputHelper
         _inputActions.XRIRightHandInteraction.Activate.canceled += RightActivateCallback;
         _inputActions.XRIRightHandInteraction.Select.performed += RightSelectCallback;
         _inputActions.XRIRightHandInteraction.Select.canceled += RightSelectCallback;
+    }
+
+    void Update()
+    {
+        _inputData.buttonHeld = BoolArrayHelper.GetTrueIndices(_buttonHeld);
+    }
+
+    public override void UpdateClientState(ref ClientState state)
+    {
+        state.input = _inputData;
+    }
+
+    public override void OnEndFrame()
+    {
+        for (int buttonId = 0; buttonId < NUM_BUTTONS; buttonId++)
+        {
+            _inputData.buttonUp.Clear();
+            _inputData.buttonDown.Clear();
+        }
     }
 
     private void ButtonPressReleaseCallback(int buttonId, bool down)
@@ -68,20 +85,6 @@ public class XRInputHelper
         }
     }
 
-    public ButtonInputData UpdateInputData()
-    {
-        _inputData.buttonHeld = BoolArrayHelper.GetTrueIndices(_buttonHeld);
-        return _inputData;
-    }
-    public void OnEndFrame()
-    {
-        for (int buttonId = 0; buttonId < NUM_BUTTONS; buttonId++)
-        {
-            _inputData.buttonUp.Clear();
-            _inputData.buttonDown.Clear();
-        }
-    }
-
     private void LeftActivateCallback(InputAction.CallbackContext obj)
     {
         ButtonPressReleaseCallback(0, obj.performed);
@@ -101,24 +104,11 @@ public class XRInputHelper
     {
         ButtonPressReleaseCallback(3, obj.performed);
     }
-}
 
-public class XRInputHelperComponent : MonoBehaviour
-{
-#if UNITY_EDITOR
-    // Start is called before the first frame update
     void Start()
     {
-        XRDeviceSimulator xrDeviceSimulator = (XRDeviceSimulator)FindObjectOfType(typeof(XRDeviceSimulator), true);
-
-        if (xrDeviceSimulator != null)
-        {
-            xrDeviceSimulator.gameObject.SetActive(true);
-        }
-        else
-        {
-            Debug.LogWarning("XR Device Simulator not found in the scene!");
-        }
-    }
+#if UNITY_EDITOR
+        XRUtils.LaunchXRDeviceSimulator();
 #endif
+    }
 }
