@@ -28,14 +28,14 @@ Tested on Linux and MacOS.
 4. At the start of the Unity installation, you're asked about platforms to install.
    * Select `Android Build Tools`, including subitems `OpenJDK` and `Android SDK and NDK Tools`.
 5. After the correct Unity Editor version is installed, open the `siro_hitl_unity_client project` again from Unity Hub.
-6. Once the project is open in the Unity Editor, open the correct scene: `File > Open Scene > Assets > Scenes > GfxReplayPlayerScene`
+6. Once the project is open in the Unity Editor, open the correct scene: `File > Open Scene > Assets > Scenes > PlayerVR`
 
 ## Local testing with the Unity Editor and VR emulation
 In this step, you'll view an HSSD stage model, get familiar with the Unity Editor, and learn the VR emulation controls. No HITL server or VR headset is required. You can navigate around the scene but there's no interactivity (interactivity requires the HITL server, below).
 
 1. From the Project pane, navigate the tree to `Assets/temp`. Drag `106879104_174887235` into the Scene pane. You should see an HSSD stage with walls and floors but no other clutter.
 2. In the Scene pane, hold Alt + Left Click and drag the mouse to rotate your view. Check some videos or tutorials on the web to learn more Unity Editor controls.
-3. Note the scene's `XR Device Simulator` game object (disabled by default). Note also ScriptSingletonsObject's `XR Input Helper Component`. This component automatically enables the XR Device Simulator object when running in the editor (this simulator must not be enabled when running on the VR headset).
+3. Note the scene's `XR Device Simulator` game object (disabled by default). Also note the `Input Tracker XR` components. These components automatically enable the XR Device Simulator object when running in the editor (this simulator must not be enabled when running on the VR headset).
 4. Hit play (top-center button). After some loading, you should see a first-person view of the stage, along with simulated VR controllers.
 5. Browse the scene.
     * Use WASD, Q/E, and the mouse to move and look around.
