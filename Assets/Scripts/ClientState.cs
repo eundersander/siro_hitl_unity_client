@@ -23,13 +23,13 @@ public class AvatarData
 [Serializable]
 public class PoseData
 {
-    public List<float> position = new List<float>(3);
-    public List<float> rotation = new List<float>(4);
+    public float[] position = new float[3];
+    public float[] rotation = new float[4];
 
     public void FromGameObject(GameObject gameObject)
     {
-        position = CoordinateSystem.ToHabitatVector(gameObject.transform.position);
-        rotation = CoordinateSystem.ToHabitatQuaternion(gameObject.transform.rotation);
+        position = CoordinateSystem.ToHabitatVector(gameObject.transform.position).ToArray();
+        rotation = CoordinateSystem.ToHabitatQuaternion(gameObject.transform.rotation).ToArray();
     }
 }
 

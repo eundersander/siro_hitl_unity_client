@@ -5,6 +5,7 @@ using NativeWebSocket;
 using UnityEngine.Assertions;
 using System.Collections;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 public class NetworkClient : MonoBehaviour
 {
@@ -36,6 +37,15 @@ public class NetworkClient : MonoBehaviour
 
     ClientState _clientState = new ClientState();
     InputTracker[] _inputTrackers;
+
+    JsonSerializerSettings _jsonSettings = new JsonSerializerSettings
+    {
+        // Omit null values when serializing objects.
+        // E.g. XR-specific data will be omitted when XR is disabled.
+        NullValueHandling = NullValueHandling.Ignore,
+        // Skip missing JSON fields when deserializing.
+        MissingMemberHandling = MissingMemberHandling.Ignore
+    };
 
     void Start()
     {
@@ -241,7 +251,7 @@ public class NetworkClient : MonoBehaviour
         if (isConnected())
         {
             UpdateClientState();
-            string jsonStr = JsonUtility.ToJson(_clientState);
+            string jsonStr = JsonConvert.SerializeObject(_clientState, Formatting.None, _jsonSettings);
             foreach (var updater in _inputTrackers)
             {
                 updater.OnEndFrame();
