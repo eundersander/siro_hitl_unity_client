@@ -32,30 +32,30 @@ public class GfxReplayPlayer : MonoBehaviour
 
     void Awake()
     {
-        _highlightManager = GetComponent<HighlightManager>();
+        _highlightManager = FindObjectOfType<HighlightManager>();
         if (_highlightManager == null)
         {
-            Debug.LogWarning($"Highlight manager missing from '{name}'. Object highlights will be ignored.");
+            Debug.LogWarning($"Couldn't find a HighlightManager. Object highlights will be ignored.");
         }
-        _avatarPositionHandler = GetComponent<AvatarPositionHandler>();
+        _avatarPositionHandler = FindObjectOfType<AvatarPositionHandler>();
         if (_avatarPositionHandler == null)
         {
-            Debug.LogWarning($"Avatar position handler missing from '{name}'. Avatar position updates will be ignored.");
+            Debug.LogWarning($"Couldn't find a AvatarPositionHandler. Avatar position updates will be ignored.");
         }
-        _statusDisplayHelper = GetComponent<StatusDisplayHelper>();
+        _statusDisplayHelper = FindObjectOfType<StatusDisplayHelper>();
         if (_statusDisplayHelper == null)
         {
-            Debug.LogWarning($"Status display helper missing from '{name}'. Status updates will be ignored.");
+            Debug.LogWarning($"Couldn't find a StatusDisplayHelper. Status updates will be ignored.");
         }
-        _navmeshHelper = GameObject.FindObjectOfType<NavmeshHelper>();
+        _navmeshHelper = FindObjectOfType<NavmeshHelper>();
         if (!_navmeshHelper)
         {
             Debug.LogWarning($"Couldn't find a NavmeshHelper. Navmesh updates will be ignored.");
         }
-        _textRenderer = GetComponent<TextRenderer>();
+        _textRenderer = FindObjectOfType<TextRenderer>();
         if (_textRenderer == null)
         {
-            Debug.LogWarning($"Text renderer missing from '{name}'. Text messages won't be displayed.");
+            Debug.LogWarning($"Couldn't find a TextRenderer. Text messages won't be displayed.");
         }
     }
 

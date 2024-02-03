@@ -11,7 +11,7 @@ public static class XRUtils
     {
         XRDeviceSimulator xrDeviceSimulator = GameObject.FindObjectOfType<XRDeviceSimulator>(true);
 
-        if (xrDeviceSimulator != null && !xrDeviceSimulator.isActiveAndEnabled)
+        if (xrDeviceSimulator != null)
         {
             xrDeviceSimulator.gameObject.SetActive(true);
         }

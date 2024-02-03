@@ -29,10 +29,10 @@ public class StatusDisplayHelper : MonoBehaviour
     void Awake()
     {
         offlineIcon.SetActive(false);
-        _networkClient = GetComponent<NetworkClient>();
+        _networkClient = FindObjectOfType<NetworkClient>();
         if (_networkClient == null)
         {
-            Debug.LogWarning($"Network client missing from '{name}'. Network status updates will be ignored.");
+            Debug.LogWarning($"Network client missing from the scene. Network status updates will be ignored.");
         }
         _ambientColor = RenderSettings.ambientLight;
         _iconTargetTransform = new GameObject("Icon target transform").transform;

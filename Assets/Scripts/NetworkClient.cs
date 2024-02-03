@@ -3,7 +3,6 @@ using UnityEngine;
 using System.Collections.Generic;
 using NativeWebSocket;
 using UnityEngine.Assertions;
-using UnityEngine.Windows;
 using System.Collections;
 using System.Threading.Tasks;
 
@@ -40,12 +39,12 @@ public class NetworkClient : MonoBehaviour
 
     void Start()
     {
-        _player = GetComponent<GfxReplayPlayer>();
+        _player = FindObjectOfType<GfxReplayPlayer>();
         Assert.IsTrue(_player);  // our object should have a GfxReplayPlayer
-        _configLoader = GetComponent<ConfigLoader>();
+        _configLoader = FindObjectOfType<ConfigLoader>();
         Assert.IsTrue(_configLoader);
 
-        _inputTrackers = GetComponentsInChildren<InputTracker>();
+        _inputTrackers = FindObjectsOfType<InputTracker>();
         if (_inputTrackers.Length == 0)
         {
             Debug.LogWarning("No InputTracker could be found. The client won't send any data to the server.");

@@ -13,7 +13,7 @@ public class ReplayFileLoader : MonoBehaviour
 
     void Start()
     {
-        _player = GetComponent<GfxReplayPlayer>();
+        _player = FindObjectOfType<GfxReplayPlayer>();
         Assert.IsTrue(_player);  // our object should have a GfxReplayPlayer
 
         _keyframeWrapper = JsonUtility.FromJson<KeyframeWrapper>(jsonFile.text);
