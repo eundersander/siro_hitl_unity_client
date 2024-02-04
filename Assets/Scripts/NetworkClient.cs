@@ -226,7 +226,7 @@ public class NetworkClient : MonoBehaviour
 
     void ProcessReceivedKeyframes(string message)
     {
-        KeyframeWrapper wrapperArray = JsonUtility.FromJson<KeyframeWrapper>(message);
+        KeyframeWrapper wrapperArray = JsonConvert.DeserializeObject<KeyframeWrapper>(message, _jsonSettings);
         foreach (KeyframeData keyframe in wrapperArray.keyframes)
         {
             _player.ProcessKeyframe(keyframe);

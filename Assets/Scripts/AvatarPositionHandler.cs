@@ -12,7 +12,7 @@ public class AvatarPositionHandler : MonoBehaviour
     {
         if (!enabled) return;
 
-        var avatarPosition = keyframe?.message.teleportAvatarBasePosition;
+        var avatarPosition = keyframe?.message?.teleportAvatarBasePosition;
         if (avatarPosition != null && avatarPosition.Count == 3)
         {
             Vector3 newPosition = CoordinateSystem.ToUnityVector(avatarPosition);
