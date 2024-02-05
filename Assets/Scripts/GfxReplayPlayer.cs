@@ -24,6 +24,7 @@ public class GfxReplayPlayer : MonoBehaviour
     private Dictionary<int, MovementData> _movementData = new Dictionary<int, MovementData>();
     private float _keyframeInterval = 0.1f;  // assume 10Hz, but see also SetKeyframeRate
     const bool _useKeyframeInterpolation = true;
+    Dictionary<int, GfxReplaySkinnedMesh> _skinnedMeshes = new Dictionary<int, GfxReplaySkinnedMesh>();
 
     void Awake()
     {
@@ -274,11 +275,51 @@ public class GfxReplayPlayer : MonoBehaviour
                     instance.transform.localScale = new Vector3(creationItem.creation.scale[0], creationItem.creation.scale[1], creationItem.creation.scale[2]);
                 }
 
+                int rigId = creationItem.creation.rigId;
+                if (rigId != Constants.ID_UNDEFINED)
+                {
+                    var skinnedMesh = instance.AddComponent<GfxReplaySkinnedMesh>();
+                    skinnedMesh.rigId = rigId;
+                    _skinnedMeshes[rigId] = skinnedMesh;
+                }
+
                 instance = HandleFrame(instance, load.frame);
 
                 _instanceDictionary[creationItem.instanceKey] = instance;
             }
             Debug.Log($"Processed {keyframe.creations.Length} creations!");
+        }
+
+        if (keyframe.rigCreations != null)
+        {
+            foreach (var rigCreation in keyframe.rigCreations)
+            {
+                int rigId = rigCreation.id;
+                if (_skinnedMeshes.TryGetValue(rigId, out GfxReplaySkinnedMesh skinnedMesh))
+                {
+                    skinnedMesh.configureRigInstance(rigCreation.boneNames);
+                }
+                else
+                {
+                    Debug.LogError($"Rig ID {rigId} is not associated to a known object.");
+                }
+            }
+        }
+
+        if (keyframe.rigUpdates != null)
+        {
+            foreach (var rigUpdate in keyframe.rigUpdates)
+            {
+                int rigId = rigUpdate.id;
+                if (_skinnedMeshes.TryGetValue(rigId, out GfxReplaySkinnedMesh skinnedMesh))
+                {
+                    skinnedMesh.setPose(rigUpdate.pose);
+                }
+                else
+                {
+                    Debug.LogError($"Rig ID {rigId} is not associated to a known object.");
+                }
+            }
         }
 
         ProcessStateUpdates(keyframe);
@@ -288,10 +329,13 @@ public class GfxReplayPlayer : MonoBehaviour
         {
             foreach (var key in keyframe.deletions)
             {
-                if (_instanceDictionary.ContainsKey(key))
+                if (_instanceDictionary.TryGetValue(key, out GameObject obj))
                 {
-                    Destroy(_instanceDictionary[key]);
-                    _instanceDictionary.Remove(key);
+                    GfxReplaySkinnedMesh skinnedMesh = obj.GetComponent<GfxReplaySkinnedMesh>();
+                    if (skinnedMesh != null)
+                    {
+                        _skinnedMeshes.Remove(skinnedMesh.rigId);
+                    }
                 }
             }
             StartCoroutine(ReleaseUnusedMemory(
