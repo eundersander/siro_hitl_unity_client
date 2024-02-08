@@ -16,7 +16,7 @@ public class ConfigLoader : MonoBehaviour
     private bool _mouseoverForTooltip;  // dummy member so we can add tooltip in Inspector pane
     [Space(10)] // Add a little spacing for clarity
 
-    [SerializeField] private string[] defaultServerLocations = { "1.2.3.4", "1.2.3.5:6789" };
+    [SerializeField] private string[] defaultServerLocations = { "127.0.01:8888" };
     // [SerializeField] private int defaultVisualQuality = 2;
 
     private Config _config;

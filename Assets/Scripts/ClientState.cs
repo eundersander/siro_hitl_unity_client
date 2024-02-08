@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [Serializable]
+// Message that is sent from the client to the server periodically.
 public class ClientState
 {
     public AvatarData avatar;
@@ -10,6 +11,7 @@ public class ClientState
 }
 
 [Serializable]
+// Contains the avatar head and controller poses.
 public class AvatarData
 {
     public PoseData root = new PoseData();
@@ -21,6 +23,7 @@ public class AvatarData
 }
 
 [Serializable]
+// Serializable transform.
 public class PoseData
 {
     public float[] position = new float[3];
@@ -34,6 +37,7 @@ public class PoseData
 }
 
 [Serializable]
+// Collection of buttons that were held, pressed or released since the last client message.
 public class ButtonInputData
 {
     public List<int> buttonHeld = new List<int>();

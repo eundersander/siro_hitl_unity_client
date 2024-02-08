@@ -128,7 +128,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2732823735987525500}
   m_Layer: 0
-  m_Name: Lighting
+  m_Name: DefaultLightSetup
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

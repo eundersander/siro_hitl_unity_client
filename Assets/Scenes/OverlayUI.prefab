@@ -287,7 +287,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5096523762376278264}
   m_Layer: 0
-  m_Name: UI
+  m_Name: OverlayUI
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

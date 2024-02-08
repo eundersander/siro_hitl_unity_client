@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class AvatarPositionHandler : MonoBehaviour
+public class AvatarPositionHandler : MessageConsumer
 {
     [Tooltip("GameObject containing the XR camera.")]
     public GameObject xrCameraNode;
@@ -8,11 +8,11 @@ public class AvatarPositionHandler : MonoBehaviour
     [Tooltip("Parent GameObject to the XR camera and controllers to be displaced by this script.")]
     public GameObject xrOriginNode;
 
-    public void ProcessKeyframe(KeyframeData keyframe)
+    public override void ProcessMessage(Message message)
     {
         if (!enabled) return;
 
-        var avatarPosition = keyframe?.message?.teleportAvatarBasePosition;
+        var avatarPosition = message.teleportAvatarBasePosition;
         if (avatarPosition != null && avatarPosition.Count == 3)
         {
             Vector3 newPosition = CoordinateSystem.ToUnityVector(avatarPosition);

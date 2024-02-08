@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-public class HighlightManager : MonoBehaviour
+public class HighlightManager : MessageConsumer
 {
     const float TWO_PI = Mathf.PI * 2.0f;
     
@@ -60,7 +60,7 @@ public class HighlightManager : MonoBehaviour
         }
     }
 
-    public void ProcessKeyframe(KeyframeData keyframe)
+    public override void ProcessMessage(Message message)
     {
         if (!enabled) return;
 
@@ -70,7 +70,7 @@ public class HighlightManager : MonoBehaviour
             _highlightPool[i].enabled = false;
         }
         // Draw highlights
-        var highlightsMessage = keyframe.message?.highlights;
+        var highlightsMessage = message.highlights;
         if (highlightsMessage != null)
         {
             _activeHighlightCount = Math.Min(highlightsMessage.Length, _highlightPool.Length);

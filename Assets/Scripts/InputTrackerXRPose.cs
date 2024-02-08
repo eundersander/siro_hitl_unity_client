@@ -17,11 +17,4 @@ public class InputTrackerXRPose : InputTracker
     }
 
     public override void OnEndFrame() {}
-
-    void Start()
-    {
-#if UNITY_EDITOR
-        XRUtils.LaunchXRDeviceSimulator();
-#endif
-    }
 }

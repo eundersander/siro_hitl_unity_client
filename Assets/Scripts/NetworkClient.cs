@@ -49,12 +49,12 @@ public class NetworkClient : MonoBehaviour
 
     void Start()
     {
-        _player = FindObjectOfType<GfxReplayPlayer>();
+        _player = GetComponent<GfxReplayPlayer>();
         Assert.IsTrue(_player);  // our object should have a GfxReplayPlayer
-        _configLoader = FindObjectOfType<ConfigLoader>();
+        _configLoader = GetComponent<ConfigLoader>();
         Assert.IsTrue(_configLoader);
 
-        _inputTrackers = FindObjectsOfType<InputTracker>();
+        _inputTrackers = GetComponents<InputTracker>();
         if (_inputTrackers.Length == 0)
         {
             Debug.LogWarning("No InputTracker could be found. The client won't send any data to the server.");

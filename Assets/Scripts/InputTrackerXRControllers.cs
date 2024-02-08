@@ -104,11 +104,4 @@ public class InputTrackerXRControllers : InputTracker
     {
         ButtonPressReleaseCallback(3, obj.performed);
     }
-
-    void Start()
-    {
-#if UNITY_EDITOR
-        XRUtils.LaunchXRDeviceSimulator();
-#endif
-    }
 }

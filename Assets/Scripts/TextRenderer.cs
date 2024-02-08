@@ -1,7 +1,7 @@
 using TMPro;
 using UnityEngine;
 
-public class TextRenderer : MonoBehaviour
+public class TextRenderer : MessageConsumer
 {
     const float UI_GAZE_FOLLOWING_SPEED = 10.0f;
 
@@ -44,5 +44,10 @@ public class TextRenderer : MonoBehaviour
 
         textPanelRoot.SetActive(string.IsNullOrEmpty(text));
         textComponent.text = text;
+    }
+
+    public override void ProcessMessage(Message message)
+    {
+        SetText(message.textMessage);
     }
 }

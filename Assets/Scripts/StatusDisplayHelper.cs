@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-public class StatusDisplayHelper : MonoBehaviour
+public class StatusDisplayHelper : MessageConsumer
 {
     const float UI_GAZE_FOLLOWING_SPEED = 10.0f;
 
@@ -26,10 +26,10 @@ public class StatusDisplayHelper : MonoBehaviour
     Coroutine _networkStatusIconCoroutine = null;
     Coroutine _sceneChangeCoroutine = null;
 
-    void Awake()
+    void Start()
     {
         offlineIcon.SetActive(false);
-        _networkClient = FindObjectOfType<NetworkClient>();
+        _networkClient = GetComponent<NetworkClient>();
         if (_networkClient == null)
         {
             Debug.LogWarning($"Network client missing from the scene. Network status updates will be ignored.");
@@ -135,7 +135,23 @@ public class StatusDisplayHelper : MonoBehaviour
         RenderSettings.fog = false;
     }
 
-    float EaseInCubic(float x) {
+    static float EaseInCubic(float x) {
         return x * x * x;
+    }
+
+    public override void ProcessMessage(Message message)
+    {
+        if (message.sceneChanged)
+        {
+            OnSceneChangeBegin();
+        }
+    }
+
+    public override void PostProcessMessage(Message message)
+    {
+        if (message.sceneChanged)
+        {
+            OnSceneChangeEnd();
+        }
     }
 }
