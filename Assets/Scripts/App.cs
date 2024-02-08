@@ -1,6 +1,9 @@
-using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Base Habitat client application.
+/// Sets up the core functionality allowing to read replay keyframes and send client state.
+/// </summary>
 [RequireComponent(typeof(ConfigLoader))]
 public class App : MonoBehaviour
 {

@@ -1,6 +1,10 @@
 using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit.Inputs.Simulation;
 
+/// <summary>
+/// VR Habitat client application.
+/// Intended to be deployed to Quest devices (Android).
+/// </summary>
 [RequireComponent(typeof(AvatarPositionHandler))]
 [RequireComponent(typeof(HighlightManager))]
 [RequireComponent(typeof(StatusDisplayHelper))]
@@ -10,24 +14,8 @@ using UnityEngine.XR.Interaction.Toolkit.Inputs.Simulation;
 [RequireComponent(typeof(InputTrackerXRPose))]
 public class AppVR : App
 {
-    protected AvatarPositionHandler _avatarPositionHandler;
-    protected HighlightManager _highlightManager;
-    protected StatusDisplayHelper _statusDisplayHelper;
-    protected TextRenderer _textRenderer;
-    protected NavmeshHelper _navmeshHelper;
-    protected InputTrackerXRControllers _inputTrackerXRControllers;
-    protected InputTrackerXRPose _inputTrackerXRPose;
-
     protected override void Main()
     {
-        _avatarPositionHandler = gameObject.GetComponent<AvatarPositionHandler>();
-        _highlightManager = gameObject.GetComponent<HighlightManager>();
-        _statusDisplayHelper = gameObject.GetComponent<StatusDisplayHelper>();
-        _textRenderer = gameObject.GetComponent<TextRenderer>();
-        _navmeshHelper = gameObject.GetComponent<NavmeshHelper>();
-        _inputTrackerXRControllers = gameObject.GetComponent<InputTrackerXRControllers>();
-        _inputTrackerXRPose = gameObject.GetComponent<InputTrackerXRPose>();
-
         base.Main();
     }
 
