@@ -6,9 +6,13 @@ using UnityEngine;
 /// </summary>
 [RequireComponent(typeof(HighlightManager))]
 [RequireComponent(typeof(StatusDisplayHelper))]
-[RequireComponent(typeof(TextRenderer))]
+[RequireComponent(typeof(TextConsumer))]
+[RequireComponent(typeof(CameraTransformConsumer))]
+[RequireComponent(typeof(InputTrackerKeyboard))]
+[RequireComponent(typeof(InputTrackerMouse))]
 public class AppMouseKeyboard : App
 {
+
     protected override void Main()
     {
         base.Main();
