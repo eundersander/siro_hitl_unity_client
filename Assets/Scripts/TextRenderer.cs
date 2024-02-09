@@ -48,6 +48,7 @@ public class TextRenderer : MessageConsumer
 
     public override void ProcessMessage(Message message)
     {
-        SetText(message.textMessage);
+        // TODO: Deprecate
+        //SetText(message.textMessage);
     }
 }
