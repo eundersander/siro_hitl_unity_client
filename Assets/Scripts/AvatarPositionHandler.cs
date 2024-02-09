@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class AvatarPositionHandler : MessageConsumer
+public class AvatarPositionHandler : MonoBehaviour, IKeyframeMessageConsumer
 {
     [Tooltip("GameObject containing the XR camera.")]
     public GameObject xrCameraNode;
@@ -8,7 +8,7 @@ public class AvatarPositionHandler : MessageConsumer
     [Tooltip("Parent GameObject to the XR camera and controllers to be displaced by this script.")]
     public GameObject xrOriginNode;
 
-    public override void ProcessMessage(Message message)
+    public void ProcessMessage(Message message)
     {
         if (!enabled) return;
 

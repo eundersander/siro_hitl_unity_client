@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-public class HighlightManager : MessageConsumer
+public class HighlightManager : MonoBehaviour, IKeyframeMessageConsumer
 {
     const float TWO_PI = Mathf.PI * 2.0f;
     
@@ -60,7 +60,7 @@ public class HighlightManager : MessageConsumer
         }
     }
 
-    public override void ProcessMessage(Message message)
+    public void ProcessMessage(Message message)
     {
         if (!enabled) return;
 

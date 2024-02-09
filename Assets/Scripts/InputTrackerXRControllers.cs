@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.InputSystem;
 
@@ -18,7 +19,7 @@ public class BoolArrayHelper
     }
 }
 
-public class InputTrackerXRControllers : InputTracker
+public class InputTrackerXRControllers : MonoBehaviour, IClientStateProducer
 {
     XRIDefaultInputActions _inputActions;
     ButtonInputData _inputData = new ButtonInputData();
@@ -50,12 +51,12 @@ public class InputTrackerXRControllers : InputTracker
         _inputData.buttonHeld = BoolArrayHelper.GetTrueIndices(_buttonHeld);
     }
 
-    public override void UpdateClientState(ref ClientState state)
+    public void UpdateClientState(ref ClientState state)
     {
         state.input = _inputData;
     }
 
-    public override void OnEndFrame()
+    public void OnEndFrame()
     {
         for (int buttonId = 0; buttonId < NUM_BUTTONS; buttonId++)
         {

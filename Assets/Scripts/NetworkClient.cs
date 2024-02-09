@@ -36,7 +36,7 @@ public class NetworkClient : MonoBehaviour
     private ConfigLoader _configLoader;
 
     ClientState _clientState = new ClientState();
-    InputTracker[] _inputTrackers;
+    IClientStateProducer[] _inputTrackers;
 
     JsonSerializerSettings _jsonSettings = new JsonSerializerSettings
     {
@@ -54,7 +54,7 @@ public class NetworkClient : MonoBehaviour
         _configLoader = GetComponent<ConfigLoader>();
         Assert.IsTrue(_configLoader);
 
-        _inputTrackers = GetComponents<InputTracker>();
+        _inputTrackers = GetComponents<IClientStateProducer>();
         if (_inputTrackers.Length == 0)
         {
             Debug.LogWarning("No InputTracker could be found. The client won't send any data to the server.");

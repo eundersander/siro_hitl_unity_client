@@ -9,7 +9,7 @@ using UnityEngine.XR.Interaction.Toolkit;
 /// provide a floor collision plane, to prevent the avatar falling through
 /// the world when it leaves the navmesh.
 /// </summary>
-public class NavmeshHelper : MessageConsumer
+public class NavmeshHelper : MonoBehaviour, IKeyframeMessageConsumer
 {
     private GameObject _navmeshObject;
     private TeleportationArea _teleportationArea;
@@ -35,7 +35,7 @@ public class NavmeshHelper : MessageConsumer
         return vertices;
     }
 
-    public override void ProcessMessage(Message message)
+    public void ProcessMessage(Message message)
     {
         if (message.navmeshVertices != null && message.navmeshVertices.Count > 0)
         {

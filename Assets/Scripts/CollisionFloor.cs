@@ -4,11 +4,11 @@ using UnityEngine;
 /// <summary>
 /// Creates a large planar collider at Y=0 to prevent rigid bodies from falling through the scene.
 /// </summary>
-public class CollisionFloor : MonoBehaviour
+public class CollisionFloor
 {
     private GameObject _floorObject;
 
-    void Awake()
+    public CollisionFloor()
     {
         _floorObject = new GameObject("Collision Floor");
         _floorObject.transform.position = Vector3.zero;

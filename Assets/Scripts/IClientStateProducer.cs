@@ -1,9 +1,7 @@
-using UnityEngine;
-
 /// <summary>
-/// Component that tracks an input and makes it available.
+/// Component that produces ClientState data.
 /// </summary>
-public abstract class InputTracker : MonoBehaviour
+public interface IClientStateProducer
 {
     /// <summary>
     /// Gather all inputs that occurred since the last OnEndFrame() call.

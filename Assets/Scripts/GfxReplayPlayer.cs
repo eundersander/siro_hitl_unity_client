@@ -19,7 +19,7 @@ public class GfxReplayPlayer : MonoBehaviour
 
     private Dictionary<int, GameObject> _instanceDictionary = new Dictionary<int, GameObject>();
     private Dictionary<string, Load> _loadDictionary = new Dictionary<string, Load>();
-    MessageConsumer[] _messageConsumers;
+    IKeyframeMessageConsumer[] _messageConsumers;
 
     private Dictionary<int, MovementData> _movementData = new Dictionary<int, MovementData>();
     private float _keyframeInterval = 0.1f;  // assume 10Hz, but see also SetKeyframeRate
@@ -27,7 +27,7 @@ public class GfxReplayPlayer : MonoBehaviour
 
     void Awake()
     {
-        _messageConsumers = GetComponents<MessageConsumer>();
+        _messageConsumers = GetComponents<IKeyframeMessageConsumer>();
     }
 
     public void SetKeyframeRate(float rate)

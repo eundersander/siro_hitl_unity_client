@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-public class StatusDisplayHelper : MessageConsumer
+public class StatusDisplayHelper : MonoBehaviour, IKeyframeMessageConsumer
 {
     const float UI_GAZE_FOLLOWING_SPEED = 10.0f;
 
@@ -139,7 +139,7 @@ public class StatusDisplayHelper : MessageConsumer
         return x * x * x;
     }
 
-    public override void ProcessMessage(Message message)
+    public void ProcessMessage(Message message)
     {
         if (message.sceneChanged)
         {
@@ -147,7 +147,7 @@ public class StatusDisplayHelper : MessageConsumer
         }
     }
 
-    public override void PostProcessMessage(Message message)
+    public void PostProcessMessage(Message message)
     {
         if (message.sceneChanged)
         {

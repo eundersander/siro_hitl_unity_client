@@ -5,6 +5,7 @@ using UnityEngine.XR.Interaction.Toolkit.Inputs.Simulation;
 /// VR Habitat client application.
 /// Intended to be deployed to Quest devices (Android).
 /// </summary>
+[RequireComponent(typeof(ConfigLoader))]
 [RequireComponent(typeof(AvatarPositionHandler))]
 [RequireComponent(typeof(HighlightManager))]
 [RequireComponent(typeof(StatusDisplayHelper))]
@@ -12,17 +13,33 @@ using UnityEngine.XR.Interaction.Toolkit.Inputs.Simulation;
 [RequireComponent(typeof(NavmeshHelper))]
 [RequireComponent(typeof(InputTrackerXRControllers))]
 [RequireComponent(typeof(InputTrackerXRPose))]
-public class AppVR : App
+public class AppVR : MonoBehaviour
 {
-    protected override void Main()
+    protected GfxReplayPlayer _gfxReplayPlayer;
+    protected NetworkClient _networkClient;
+    protected CollisionFloor _collisionFloor;
+
+    void Main()
     {
-        base.Main();
+        LaunchXRDeviceSimulator();
+
+        _gfxReplayPlayer = gameObject.AddComponent<GfxReplayPlayer>();
+        _networkClient = gameObject.AddComponent<NetworkClient>();
+        _collisionFloor = new CollisionFloor();
+
+        // If the local replay file loader component is enabled, disable networking.
+        // This is done in the Editor.
+        var replayFileLoader = gameObject.GetComponent<ReplayFileLoader>();
+        if (replayFileLoader.enabled)
+        {
+            Debug.LogWarning("Replay file loader enabled. Disabling network client.");
+            _networkClient.enabled = false;
+        }
     }
 
     void Awake()
     {
         Main();
-        LaunchXRDeviceSimulator();
     }
 
     /// <summary>

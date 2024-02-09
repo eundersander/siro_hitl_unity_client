@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class InputTrackerXRPose : InputTracker
+public class InputTrackerXRPose : MonoBehaviour, IClientStateProducer
 {
     AvatarData _inputData = new AvatarData();
 
@@ -8,7 +8,7 @@ public class InputTrackerXRPose : InputTracker
     public GameObject xrLeftControllerObject;
     public GameObject xrRightControllerObject;
 
-    public override void UpdateClientState(ref ClientState state)
+    public void UpdateClientState(ref ClientState state)
     {
         _inputData.root.FromGameObject(xrHeadObject);
         _inputData.hands[0].FromGameObject(xrLeftControllerObject);
@@ -16,5 +16,5 @@ public class InputTrackerXRPose : InputTracker
         state.avatar = _inputData;
     }
 
-    public override void OnEndFrame() {}
+    public void OnEndFrame() {}
 }

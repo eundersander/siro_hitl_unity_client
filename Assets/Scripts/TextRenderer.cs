@@ -1,7 +1,7 @@
 using TMPro;
 using UnityEngine;
 
-public class TextRenderer : MessageConsumer
+public class TextRenderer : MonoBehaviour, IKeyframeMessageConsumer
 {
     const float UI_GAZE_FOLLOWING_SPEED = 10.0f;
 
@@ -46,7 +46,7 @@ public class TextRenderer : MessageConsumer
         textComponent.text = text;
     }
 
-    public override void ProcessMessage(Message message)
+    public void ProcessMessage(Message message)
     {
         SetText(message.textMessage);
     }
