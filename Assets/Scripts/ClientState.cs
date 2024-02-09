@@ -7,7 +7,10 @@ using UnityEngine;
 public class ClientState
 {
     public AvatarData avatar;
-    public ButtonInputData input;
+    public ButtonInputData input; // TODO: Separate VR and keyboard input.
+    public MouseInputData mouse;
+
+    public Dictionary<string, string> connection_params_dict;
 }
 
 [Serializable]
@@ -43,4 +46,14 @@ public class ButtonInputData
     public List<int> buttonHeld = new List<int>();
     public List<int> buttonUp = new List<int>();
     public List<int> buttonDown = new List<int>();
+}
+
+[Serializable]
+// Mouse input.
+public class MouseInputData
+{
+    public ButtonInputData buttons = new ButtonInputData();
+
+    public float[] scrollDelta = new float[2];
+    public float[] screenPosition = new float[2];
 }

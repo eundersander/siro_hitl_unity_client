@@ -39,6 +39,13 @@ public class Frame
 }
 
 [Serializable]
+public class AbsTransform
+{
+    public List<float> translation;
+    public List<float> rotation;
+}
+
+[Serializable]
 public class CreationItem
 {
     public int instanceKey;
@@ -63,13 +70,6 @@ public class StateUpdate
     {
         public AbsTransform absTransform;
         public int semanticId;
-
-        [Serializable]
-        public class AbsTransform
-        {
-            public List<float> translation;
-            public List<float> rotation;
-        }
     }
 }
 
@@ -78,13 +78,19 @@ public class Message
 {
     public Highlight[] highlights;
 
+    //public Line[] lines;
+
     public List<float> teleportAvatarBasePosition;
 
     public bool sceneChanged;
     // nonindexed triangle list, serialized as a flat list of floats
     public List<float> navmeshVertices;
 
-    public string textMessage;
+    public List<Text> texts;
+
+    public AbsTransform camera;
+
+    public bool isAppReady;
 }
 
 [Serializable]
@@ -92,4 +98,18 @@ public class Highlight
 {
     public List<float> t;
     public float r;
+}
+
+[Serializable]
+public class Line
+{
+    public List<float> a;
+    public List<float> b;
+}
+
+[Serializable]
+public class Text
+{
+    public string text;
+    public List<float> position;
 }
