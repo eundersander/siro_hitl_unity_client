@@ -4,6 +4,7 @@ using UnityEngine.InputSystem;
 
 public class BoolArrayHelper
 {
+    // TODO: Change to new keycodes.
     public static List<int> GetTrueIndices(bool[] arr)
     {
         List<int> indices = new List<int>();
