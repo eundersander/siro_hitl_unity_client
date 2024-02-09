@@ -2,10 +2,12 @@ using System;
 using UnityEngine;
 using System.Collections.Generic;
 using NativeWebSocket;
+using Newtonsoft.Json;
 using UnityEngine.Assertions;
 using System.Collections;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
+
+using System.Web;
 
 public class NetworkClient : MonoBehaviour
 {
@@ -35,6 +37,8 @@ public class NetworkClient : MonoBehaviour
     private GfxReplayPlayer _player;
     private ConfigLoader _configLoader;
 
+    Dictionary<string, string> _connectionParams;
+
     ClientState _clientState = new ClientState();
     IClientStateProducer[] _clientStateProducers;
 
@@ -46,6 +50,7 @@ public class NetworkClient : MonoBehaviour
         // Skip missing JSON fields when deserializing.
         MissingMemberHandling = MissingMemberHandling.Ignore
     };
+
 
     void Start()
     {
@@ -62,14 +67,31 @@ public class NetworkClient : MonoBehaviour
             Debug.LogWarning("No IClientStateProducer could be found. The client won't send any data to the server.");
         }
 
-        string[] serverLocations = _configLoader.AppConfig.serverLocations;
+        // Read URL query parameters
+        _connectionParams = GetURLQueryParameters();
+
+        GetConnectionParameters(_connectionParams, 
+                                out string? _serverHostnameOverride,
+                                out int? _serverPortOverride);
+
+        // Set up server hostnames and port.
+        string[] serverLocations = _serverHostnameOverride != null ? 
+                                        new[]{_serverHostnameOverride} : 
+                                        _configLoader.AppConfig.serverLocations;
+        int serverPort = _serverPortOverride != null ?
+                            _serverPortOverride.Value :
+                            defaultServerPort;
         Assert.IsTrue(serverLocations.Length > 0);
         foreach (string location in serverLocations)
         {
-            string adjustedLocation = location;
-            if (!adjustedLocation.Contains(":"))
+            string adjustedLocation;
+            if (!location.Contains(":"))
             {
-                adjustedLocation += ":" + defaultServerPort;
+                adjustedLocation = $"{location}:{serverPort}";
+            }
+            else
+            {
+                adjustedLocation = location;
             }
 
             bool isHttps = false;
@@ -77,8 +99,8 @@ public class NetworkClient : MonoBehaviour
             _serverURLs.Add($"{wsProtocol}://{adjustedLocation}");
         }
 
+        // Start networking.
         StartCoroutine(TryConnectToServers());
-
         StartCoroutine(LogMessageRate());
 
         // Keep sending messages at every 0.1s
@@ -253,11 +275,21 @@ public class NetworkClient : MonoBehaviour
         if (isConnected())
         {
             UpdateClientState();
+
             string jsonStr = JsonConvert.SerializeObject(_clientState, Formatting.None, _jsonSettings);
             foreach (var updater in _clientStateProducers)
             {
                 updater.OnEndFrame();
             }
+
+            _clientState.connection_params_dict = _connectionParams;
+
+            // Stop sending connection parameters after the first message.
+            if (_connectionParams?.Count > 0)
+            {
+                _connectionParams = null;
+            }
+            
             await mainWebSocket.SendText(jsonStr);
         }
     }
@@ -277,5 +309,62 @@ public class NetworkClient : MonoBehaviour
     public bool IsConnected() 
     {
         return mainWebSocket != null && mainWebSocket.State == WebSocketState.Open;
+    }
+
+    private Dictionary<string, string> GetURLQueryParameters()
+    {
+        var output  = new Dictionary<string, string>();
+
+        string url = Application.absoluteURL;
+        if (url?.Length > 0)
+        {
+            var splitUrl = url.Split('?');
+            if (splitUrl.Length == 2)
+            {
+                var queryString = splitUrl[1];
+                var paramsCollection = HttpUtility.ParseQueryString(queryString);
+
+                foreach (var key in paramsCollection.AllKeys)
+                {
+                    output[key] = paramsCollection[key];
+                }
+            }
+        }
+
+        return output;
+    }
+
+    private void GetConnectionParameters(Dictionary<string, string> queryParams,                                   
+                                         out string? _serverHostnameOverride,
+                                         out int? _serverPortOverride)
+    {
+        _serverHostnameOverride = null;
+        _serverPortOverride = null;
+
+        // Override server URL from query arguments.
+        if (queryParams.TryGetValue("server_hostname", out string serverHostnameString))
+        {
+            if (Uri.CheckHostName(serverHostnameString) != UriHostNameType.Unknown)
+            {
+                _serverHostnameOverride = serverHostnameString;
+            }
+            else
+            {
+                Debug.LogError($"Invalid server_hostname: '{serverHostnameString}'");
+            }
+        }
+
+        // Override server port from query arguments.
+        if (queryParams.TryGetValue("server_port", out string serverPortString))
+        {
+            if (int.TryParse(serverPortString, out int port))
+            {
+                _serverPortOverride = port;
+            }
+            else
+            {
+                Debug.LogError($"Invalid server_port: '{serverPortString}'");
+            }
+        }
     }
 }

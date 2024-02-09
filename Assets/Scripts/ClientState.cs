@@ -8,6 +8,7 @@ public class ClientState
 {
     public AvatarData avatar;
     public ButtonInputData input;
+    public Dictionary<string, string> connection_params_dict;
 }
 
 [Serializable]
