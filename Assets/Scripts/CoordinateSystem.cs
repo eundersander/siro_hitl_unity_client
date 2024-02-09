@@ -30,6 +30,7 @@ public static class CoordinateSystem
         );
     }
 
+    // TODO: Rename and document that this variant is only for model manipulation.
     public static Quaternion ToUnityQuaternion(List<float> rotation)
     {
         Quaternion newRot = new Quaternion(
@@ -41,6 +42,17 @@ public static class CoordinateSystem
 
         newRot = _defaultRotation * newRot;
         return newRot;
+    }
+
+    // TODO: Rename and document why this variant is required.
+    public static Quaternion ToUnityQuaternionBase(List<float> rotation)
+    {
+        return new Quaternion(
+            rotation[1],
+            rotation[2],
+            -rotation[3],
+            -rotation[0]
+        );
     }
 
     public static List<float> ToHabitatVector(Vector3 translation)
