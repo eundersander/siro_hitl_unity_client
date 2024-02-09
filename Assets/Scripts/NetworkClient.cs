@@ -6,6 +6,7 @@ using UnityEngine.Assertions;
 using System.Collections;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using System.Web;
 
 public class NetworkClient : MonoBehaviour
 {
@@ -35,6 +36,11 @@ public class NetworkClient : MonoBehaviour
     private GfxReplayPlayer _player;
     private ConfigLoader _configLoader;
 
+    Dictionary<string, string> _connectionParams;
+
+    string? _serverHostnameOverride = null;
+    int? _serverPortOverride = null;
+
     ClientState _clientState = new ClientState();
     InputTracker[] _inputTrackers;
 
@@ -46,6 +52,37 @@ public class NetworkClient : MonoBehaviour
         // Skip missing JSON fields when deserializing.
         MissingMemberHandling = MissingMemberHandling.Ignore
     };
+
+    void Awake()
+    {
+        _connectionParams = GetURLQueryParameters();
+
+        // Override server URL from query arguments.
+        if (_connectionParams.TryGetValue("server_hostname", out string serverHostname))
+        {
+            if (Uri.CheckHostName(serverHostname) != UriHostNameType.Unknown)
+            {
+                _serverHostnameOverride = serverHostname;
+            }
+            else
+            {
+                Debug.LogError($"Invalid server_hostname: '{serverHostname}'");
+            }
+        }
+
+        // Override server port from query arguments.
+        if (_connectionParams.TryGetValue("server_port", out string serverPort))
+        {
+            if (int.TryParse(serverPort, out int port))
+            {
+                _serverPortOverride = port;
+            }
+            else
+            {
+                Debug.LogError($"Invalid server_port: '{serverPort}'");
+            }
+        }
+    }
 
     void Start()
     {
@@ -60,14 +97,18 @@ public class NetworkClient : MonoBehaviour
             Debug.LogWarning("No InputTracker could be found. The client won't send any data to the server.");
         }
 
-        string[] serverLocations = _configLoader.AppConfig.serverLocations;
+        string[] serverLocations = _serverHostnameOverride != null ? 
+                                        new[]{_serverHostnameOverride} : 
+                                        _configLoader.AppConfig.serverLocations;
         Assert.IsTrue(serverLocations.Length > 0);
         foreach (string location in serverLocations)
         {
             string adjustedLocation = location;
             if (!adjustedLocation.Contains(":"))
             {
-                adjustedLocation += ":" + defaultServerPort;
+                adjustedLocation += ":" + _serverPortOverride != null ?
+                                            _serverPortOverride.Value :
+                                            defaultServerPort;
             }
 
             bool isHttps = false;
@@ -250,12 +291,26 @@ public class NetworkClient : MonoBehaviour
     {
         if (isConnected())
         {
+            // Update the ClientState data.
             UpdateClientState();
+
+            // In the first message, include the connection parameters (URL query string)
+            _clientState.connection_params_dict = _connectionParams;
+            if (_connectionParams?.Count > 0)
+            {
+                _connectionParams = null;
+            }
+
+            // Serialize the ClientState data to JSON.
             string jsonStr = JsonConvert.SerializeObject(_clientState, Formatting.None, _jsonSettings);
+
+            // Reset the trackers.
             foreach (var updater in _inputTrackers)
             {
                 updater.OnEndFrame();
             }
+
+            // Send the message to the server.
             await mainWebSocket.SendText(jsonStr);
         }
     }
@@ -275,5 +330,28 @@ public class NetworkClient : MonoBehaviour
     public bool IsConnected() 
     {
         return mainWebSocket != null && mainWebSocket.State == WebSocketState.Open;
+    }
+
+    private Dictionary<string, string> GetURLQueryParameters()
+    {
+        var output  = new Dictionary<string, string>();
+
+        string url = Application.absoluteURL;
+        if (url?.Length > 0)
+        {
+            var splitUrl = url.Split('?');
+            if (splitUrl.Length == 2)
+            {
+                var queryString = splitUrl[1];
+                var paramsCollection = HttpUtility.ParseQueryString(queryString);
+
+                foreach (var key in paramsCollection.AllKeys)
+                {
+                    output[key] = paramsCollection[key];
+                }
+            }
+        }
+
+        return output;
     }
 }
