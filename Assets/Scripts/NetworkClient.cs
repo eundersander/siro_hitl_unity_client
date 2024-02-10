@@ -42,6 +42,9 @@ public class NetworkClient : MonoBehaviour
     ClientState _clientState = new ClientState();
     IClientStateProducer[] _clientStateProducers;
 
+    // Used to handle data that is only meant to be sent during the first transmission.
+    private bool _firstTransmission = true;
+
     JsonSerializerSettings _jsonSettings = new JsonSerializerSettings
     {
         // Omit null values when serializing objects.
@@ -51,8 +54,7 @@ public class NetworkClient : MonoBehaviour
         MissingMemberHandling = MissingMemberHandling.Ignore
     };
 
-
-    void Start()
+    void Awake()
     {
         _player = GetComponent<GfxReplayPlayer>();
         Assert.IsTrue(_player);  // our object should have a GfxReplayPlayer
@@ -66,13 +68,16 @@ public class NetworkClient : MonoBehaviour
         {
             Debug.LogWarning("No IClientStateProducer could be found. The client won't send any data to the server.");
         }
+    }
 
+    void Start()
+    {
         // Read URL query parameters
-        _connectionParams = GetURLQueryParameters();
+        _connectionParams = GetConnectionParameters();
 
-        GetConnectionParameters(_connectionParams, 
-                                out string? _serverHostnameOverride,
-                                out int? _serverPortOverride);
+        GetServerHostnameAndPort(_connectionParams, 
+                                 out string? _serverHostnameOverride,
+                                 out int? _serverPortOverride);
 
         // Set up server hostnames and port.
         string[] serverLocations = _serverHostnameOverride != null ? 
@@ -274,23 +279,34 @@ public class NetworkClient : MonoBehaviour
     {
         if (isConnected())
         {
+            // Update ClientState
             UpdateClientState();
 
+            // Only include connection parameters in the first successful transmission.
+            if (_firstTransmission && _connectionParams?.Count > 0)
+            {
+                _clientState.connection_params_dict = _connectionParams;
+            }
+
+            // Serialize ClientState to JSON.
             string jsonStr = JsonConvert.SerializeObject(_clientState, Formatting.None, _jsonSettings);
+
+            // Reset the state of IClientStateProducers
             foreach (var updater in _clientStateProducers)
             {
                 updater.OnEndFrame();
             }
 
-            _clientState.connection_params_dict = _connectionParams;
+            // Send the ClientState to the server.
+            Task task = mainWebSocket.SendText(jsonStr);
+            await task;
 
-            // Stop sending connection parameters after the first message.
-            if (_connectionParams?.Count > 0)
+            // Update state after first successful transmission.
+            if (_firstTransmission && task.Status == TaskStatus.RanToCompletion)
             {
-                _connectionParams = null;
+                _clientState.connection_params_dict = null;
+                _firstTransmission = false;
             }
-            
-            await mainWebSocket.SendText(jsonStr);
         }
     }
 
@@ -311,7 +327,7 @@ public class NetworkClient : MonoBehaviour
         return mainWebSocket != null && mainWebSocket.State == WebSocketState.Open;
     }
 
-    private Dictionary<string, string> GetURLQueryParameters()
+    private Dictionary<string, string> GetConnectionParameters()
     {
         var output  = new Dictionary<string, string>();
 
@@ -334,7 +350,7 @@ public class NetworkClient : MonoBehaviour
         return output;
     }
 
-    private void GetConnectionParameters(Dictionary<string, string> queryParams,                                   
+    private void GetServerHostnameAndPort(Dictionary<string, string> queryParams,                                   
                                          out string? _serverHostnameOverride,
                                          out int? _serverPortOverride)
     {
