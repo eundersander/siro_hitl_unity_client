@@ -146,6 +146,8 @@ public class InputTrackerKeyboard : InputTracker
             else if (Input.GetKeyUp(key))
             {
                 _buttonUp[i] = true;
+                // don't count the key as down on the frame it is released
+                _buttonHeld[i] = false;
             }
         }
     }
