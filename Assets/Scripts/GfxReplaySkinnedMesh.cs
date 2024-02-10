@@ -84,8 +84,8 @@ public class GfxReplaySkinnedMesh : MonoBehaviour
 
         for (int i = 0; i < pose.Count; ++i)
         {
-            _bones[i].position = CoordinateConventionHelper.ToUnityVector(pose[i].t);
-            _bones[i].rotation = CoordinateConventionHelper.ToUnityQuaternion(pose[i].r);
+            _bones[i].position = CoordinateSystem.ToUnityVector(pose[i].t);
+            _bones[i].rotation = CoordinateSystem.ToUnityQuaternion(pose[i].r);
         }
     }
 }
