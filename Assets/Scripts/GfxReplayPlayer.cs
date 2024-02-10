@@ -27,7 +27,13 @@ public class GfxReplayPlayer : MonoBehaviour
 
     void Awake()
     {
+        // Search the codebase for available IKeyframeMessageConsumers.
+        // They should be added to this GameObject via the Editor (or programmatically, before adding this Component).
         _messageConsumers = GetComponents<IKeyframeMessageConsumer>();
+        if (_messageConsumers.Length == 0)
+        {
+            Debug.LogWarning("No IKeyframeMessageConsumer could be found. The client will have limited functionality.");
+        }
     }
 
     public void SetKeyframeRate(float rate)

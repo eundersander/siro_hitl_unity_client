@@ -36,7 +36,7 @@ public class NetworkClient : MonoBehaviour
     private ConfigLoader _configLoader;
 
     ClientState _clientState = new ClientState();
-    IClientStateProducer[] _inputTrackers;
+    IClientStateProducer[] _clientStateProducers;
 
     JsonSerializerSettings _jsonSettings = new JsonSerializerSettings
     {
@@ -54,10 +54,12 @@ public class NetworkClient : MonoBehaviour
         _configLoader = GetComponent<ConfigLoader>();
         Assert.IsTrue(_configLoader);
 
-        _inputTrackers = GetComponents<IClientStateProducer>();
-        if (_inputTrackers.Length == 0)
+        // Search the codebase for available IClientStateProducer.
+        // They should be added to this GameObject via the Editor (or programmatically, before adding this Component).
+        _clientStateProducers = GetComponents<IClientStateProducer>();
+        if (_clientStateProducers.Length == 0)
         {
-            Debug.LogWarning("No InputTracker could be found. The client won't send any data to the server.");
+            Debug.LogWarning("No IClientStateProducer could be found. The client won't send any data to the server.");
         }
 
         string[] serverLocations = _configLoader.AppConfig.serverLocations;
@@ -235,12 +237,12 @@ public class NetworkClient : MonoBehaviour
 
     void UpdateClientState()
     {
-        if (_inputTrackers == null)
+        if (_clientStateProducers == null)
         {
             return;
         }
 
-        foreach (var updater in _inputTrackers)
+        foreach (var updater in _clientStateProducers)
         {
             updater.UpdateClientState(ref _clientState);
         }
@@ -252,7 +254,7 @@ public class NetworkClient : MonoBehaviour
         {
             UpdateClientState();
             string jsonStr = JsonConvert.SerializeObject(_clientState, Formatting.None, _jsonSettings);
-            foreach (var updater in _inputTrackers)
+            foreach (var updater in _clientStateProducers)
             {
                 updater.OnEndFrame();
             }
