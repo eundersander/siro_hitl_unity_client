@@ -19,12 +19,7 @@ public class GfxReplayPlayer : MonoBehaviour
 
     private Dictionary<int, GameObject> _instanceDictionary = new Dictionary<int, GameObject>();
     private Dictionary<string, Load> _loadDictionary = new Dictionary<string, Load>();
-
-    HighlightManager _highlightManager;
-    AvatarPositionHandler _avatarPositionHandler;
-    StatusDisplayHelper _statusDisplayHelper;
-    NavmeshHelper _navmeshHelper;
-    TextRenderer _textRenderer;
+    IKeyframeMessageConsumer[] _messageConsumers;
 
     private Dictionary<int, MovementData> _movementData = new Dictionary<int, MovementData>();
     private float _keyframeInterval = 0.1f;  // assume 10Hz, but see also SetKeyframeRate
@@ -32,30 +27,12 @@ public class GfxReplayPlayer : MonoBehaviour
 
     void Awake()
     {
-        _highlightManager = GetComponent<HighlightManager>();
-        if (_highlightManager == null)
+        // Search the codebase for available IKeyframeMessageConsumers.
+        // They should be added to this GameObject via the Editor (or programmatically, before adding this Component).
+        _messageConsumers = GetComponents<IKeyframeMessageConsumer>();
+        if (_messageConsumers.Length == 0)
         {
-            Debug.LogWarning($"Highlight manager missing from '{name}'. Object highlights will be ignored.");
-        }
-        _avatarPositionHandler = GetComponent<AvatarPositionHandler>();
-        if (_avatarPositionHandler == null)
-        {
-            Debug.LogWarning($"Avatar position handler missing from '{name}'. Avatar position updates will be ignored.");
-        }
-        _statusDisplayHelper = GetComponent<StatusDisplayHelper>();
-        if (_statusDisplayHelper == null)
-        {
-            Debug.LogWarning($"Status display helper missing from '{name}'. Status updates will be ignored.");
-        }
-        _navmeshHelper = GameObject.FindObjectOfType<NavmeshHelper>();
-        if (!_navmeshHelper)
-        {
-            Debug.LogWarning($"Couldn't find a NavmeshHelper. Navmesh updates will be ignored.");
-        }
-        _textRenderer = GetComponent<TextRenderer>();
-        if (_textRenderer == null)
-        {
-            Debug.LogWarning($"Text renderer missing from '{name}'. Text messages won't be displayed.");
+            Debug.LogWarning("No IKeyframeMessageConsumer could be found. The client will have limited functionality.");
         }
     }
 
@@ -129,8 +106,8 @@ public class GfxReplayPlayer : MonoBehaviour
                 {
                     GameObject instance = _instanceDictionary[update.instanceKey];
 
-                    Vector3 translation = CoordinateConventionHelper.ToUnityVector(update.state.absTransform.translation);
-                    Quaternion rotation = CoordinateConventionHelper.ToUnityQuaternion(update.state.absTransform.rotation);
+                    Vector3 translation = CoordinateSystem.ToUnityVector(update.state.absTransform.translation);
+                    Quaternion rotation = CoordinateSystem.ToUnityQuaternion(update.state.absTransform.rotation);
 
                     instance.transform.position = translation;
                     instance.transform.rotation = rotation;
@@ -149,8 +126,8 @@ public class GfxReplayPlayer : MonoBehaviour
                 {
                     GameObject instance = _instanceDictionary[update.instanceKey];
 
-                    Vector3 newTranslation = CoordinateConventionHelper.ToUnityVector(update.state.absTransform.translation);
-                    Quaternion newRotation = CoordinateConventionHelper.ToUnityQuaternion(update.state.absTransform.rotation);
+                    Vector3 newTranslation = CoordinateSystem.ToUnityVector(update.state.absTransform.translation);
+                    Quaternion newRotation = CoordinateSystem.ToUnityQuaternion(update.state.absTransform.rotation);
 
                     // Check if the instance is at the origin
                     if (instance.transform.position == Vector3.zero)
@@ -249,55 +226,15 @@ public class GfxReplayPlayer : MonoBehaviour
         }
     }
 
-    private void ProcessKeyframeMessage(Message message)
-    {
-        if (_navmeshHelper != null && message.navmeshVertices != null && message.navmeshVertices.Count > 0)
-        {
-            if (message.navmeshVertices.Count % 9 != 0)
-            {
-                Debug.LogError($"Ignoring keyframe.message.navmeshVertices with Count == {message.navmeshVertices.Count}. Length should be a multiple of 9.");
-            }
-            else
-            {
-                // convert to Vector3[]
-                Vector3[] vectorArray = new Vector3[message.navmeshVertices.Count / 3];
-                for (int i = 0; i < message.navmeshVertices.Count; i += 3)
-                {
-                    vectorArray[i / 3] = CoordinateConventionHelper.ToUnityVector(message.navmeshVertices[i], message.navmeshVertices[i + 1], message.navmeshVertices[i + 2]);
-                }
-
-                // it's too error-prone to expect the server to know the
-                // correct winding order for Unity raycasts, so let's do
-                // double-sided.
-                bool doDoublesided = true;
-                _navmeshHelper.UpdateNavmesh(vectorArray, doDoublesided);
-            }
-        }
-        if (_textRenderer != null)
-        {
-            _textRenderer.SetText(message.textMessage);
-        }
-        
-    }
-
     public void ProcessKeyframe(KeyframeData keyframe)
     {
         // Handle messages
-        if (_highlightManager)
-        {
-            _highlightManager.ProcessKeyframe(keyframe);
-        }
-        if (_avatarPositionHandler)
-        {
-            _avatarPositionHandler.ProcessKeyframe(keyframe);
-        }
-        if (_statusDisplayHelper != null && keyframe.message != null && keyframe.message.sceneChanged)
-        {
-            _statusDisplayHelper.OnSceneChangeBegin();
-        }
         if (keyframe.message != null)
         {
-            ProcessKeyframeMessage(keyframe.message);
+            foreach (var messageConsumer in _messageConsumers)
+            {
+                messageConsumer.ProcessMessage(keyframe.message);
+            }
         }
 
         // Handle Loads
@@ -371,9 +308,12 @@ public class GfxReplayPlayer : MonoBehaviour
 
     void KeyframePostUpdate(KeyframeData keyframe)
     {
-        if (_statusDisplayHelper != null && keyframe.message != null && keyframe.message.sceneChanged)
+        if (keyframe.message != null)
         {
-            _statusDisplayHelper.OnSceneChangeEnd();
+            foreach (var messageConsumer in _messageConsumers)
+            {
+                messageConsumer.PostProcessMessage(keyframe.message);
+            }
         }
     }
 

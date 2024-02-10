@@ -1,8 +1,7 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class HighlightManager : MonoBehaviour
+public class HighlightManager : MonoBehaviour, IKeyframeMessageConsumer
 {
     const float TWO_PI = Mathf.PI * 2.0f;
     
@@ -61,7 +60,7 @@ public class HighlightManager : MonoBehaviour
         }
     }
 
-    public void ProcessKeyframe(KeyframeData keyframe)
+    public void ProcessMessage(Message message)
     {
         if (!enabled) return;
 
@@ -71,7 +70,7 @@ public class HighlightManager : MonoBehaviour
             _highlightPool[i].enabled = false;
         }
         // Draw highlights
-        var highlightsMessage = keyframe.message?.highlights;
+        var highlightsMessage = message.highlights;
         if (highlightsMessage != null)
         {
             _activeHighlightCount = Math.Min(highlightsMessage.Length, _highlightPool.Length);
@@ -81,7 +80,7 @@ public class HighlightManager : MonoBehaviour
                 highlight.enabled = true;
 
                 // Apply translation from message
-                Vector3 center = CoordinateConventionHelper.ToUnityVector(highlightsMessage[i].t);
+                Vector3 center = CoordinateSystem.ToUnityVector(highlightsMessage[i].t);
                 highlight.transform.position = center;
 
                 // Billboarding

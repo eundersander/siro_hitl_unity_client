@@ -3,16 +3,9 @@ using UnityEngine;
 using System.Collections.Generic;
 using NativeWebSocket;
 using UnityEngine.Assertions;
-using UnityEngine.Windows;
 using System.Collections;
 using System.Threading.Tasks;
-
-[Serializable]
-public class ClientState
-{
-    public AvatarData avatar = new AvatarData();
-    public ButtonInputData input;
-}
+using Newtonsoft.Json;
 
 public class NetworkClient : MonoBehaviour
 {
@@ -33,10 +26,6 @@ public class NetworkClient : MonoBehaviour
 
     public int defaultServerPort = 8888;
 
-    public GameObject vrHeadsetObject;
-    public GameObject vrLeftControllerObject;
-    public GameObject vrRightControllerObject;
-
     List<string> _serverURLs = new List<string>();
     private WebSocket mainWebSocket;
     private int currentServerIndex = 0;
@@ -47,7 +36,16 @@ public class NetworkClient : MonoBehaviour
     private ConfigLoader _configLoader;
 
     ClientState _clientState = new ClientState();
-    XRInputHelper _xrInputHelper;
+    IClientStateProducer[] _clientStateProducers;
+
+    JsonSerializerSettings _jsonSettings = new JsonSerializerSettings
+    {
+        // Omit null values when serializing objects.
+        // E.g. XR-specific fields will be omitted when XR is disabled.
+        NullValueHandling = NullValueHandling.Ignore,
+        // Skip missing JSON fields when deserializing.
+        MissingMemberHandling = MissingMemberHandling.Ignore
+    };
 
     void Start()
     {
@@ -56,7 +54,13 @@ public class NetworkClient : MonoBehaviour
         _configLoader = GetComponent<ConfigLoader>();
         Assert.IsTrue(_configLoader);
 
-        _xrInputHelper = new XRInputHelper();
+        // Search the codebase for available IClientStateProducer.
+        // They should be added to this GameObject via the Editor (or programmatically, before adding this Component).
+        _clientStateProducers = GetComponents<IClientStateProducer>();
+        if (_clientStateProducers.Length == 0)
+        {
+            Debug.LogWarning("No IClientStateProducer could be found. The client won't send any data to the server.");
+        }
 
         string[] serverLocations = _configLoader.AppConfig.serverLocations;
         Assert.IsTrue(serverLocations.Length > 0);
@@ -224,7 +228,7 @@ public class NetworkClient : MonoBehaviour
 
     void ProcessReceivedKeyframes(string message)
     {
-        KeyframeWrapper wrapperArray = JsonUtility.FromJson<KeyframeWrapper>(message);
+        KeyframeWrapper wrapperArray = JsonConvert.DeserializeObject<KeyframeWrapper>(message, _jsonSettings);
         foreach (KeyframeData keyframe in wrapperArray.keyframes)
         {
             _player.ProcessKeyframe(keyframe);
@@ -233,15 +237,15 @@ public class NetworkClient : MonoBehaviour
 
     void UpdateClientState()
     {
-        Assert.IsNotNull(vrHeadsetObject);
-        Assert.IsNotNull(vrLeftControllerObject);
-        Assert.IsNotNull(vrRightControllerObject);
+        if (_clientStateProducers == null)
+        {
+            return;
+        }
 
-        _clientState.avatar.root.FromGameObject(vrHeadsetObject);
-        _clientState.avatar.hands[0].FromGameObject(vrLeftControllerObject);
-        _clientState.avatar.hands[1].FromGameObject(vrRightControllerObject);
-
-        _clientState.input = _xrInputHelper.UpdateInputData();
+        foreach (var updater in _clientStateProducers)
+        {
+            updater.UpdateClientState(ref _clientState);
+        }
     }
 
     async void SendClientState()
@@ -249,10 +253,11 @@ public class NetworkClient : MonoBehaviour
         if (isConnected())
         {
             UpdateClientState();
-            string jsonStr = JsonUtility.ToJson(_clientState);
-
-            _xrInputHelper.OnEndFrame();
-                
+            string jsonStr = JsonConvert.SerializeObject(_clientState, Formatting.None, _jsonSettings);
+            foreach (var updater in _clientStateProducers)
+            {
+                updater.OnEndFrame();
+            }
             await mainWebSocket.SendText(jsonStr);
         }
     }

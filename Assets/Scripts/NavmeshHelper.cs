@@ -9,8 +9,9 @@ using UnityEngine.XR.Interaction.Toolkit;
 /// provide a floor collision plane, to prevent the avatar falling through
 /// the world when it leaves the navmesh.
 /// </summary>
-public class NavmeshHelper : MonoBehaviour
+public class NavmeshHelper : MonoBehaviour, IKeyframeMessageConsumer
 {
+    private GameObject _navmeshObject;
     private TeleportationArea _teleportationArea;
     private MeshCollider _meshCollider;
 
@@ -19,7 +20,7 @@ public class NavmeshHelper : MonoBehaviour
         // Each three indices represent one triangle
         Vector3[] vertices = new Vector3[6];
 
-        float halfSize = size / 2;
+        float halfSize = size / 2.0f;
 
         // First triangle vertices (bottom left triangle)
         vertices[0] = new Vector3(-halfSize, 0, -halfSize); // Bottom left corner
@@ -32,6 +33,32 @@ public class NavmeshHelper : MonoBehaviour
         vertices[5] = new Vector3(-halfSize, 0, halfSize);  // Top left corner
 
         return vertices;
+    }
+
+    public void ProcessMessage(Message message)
+    {
+        if (message.navmeshVertices != null && message.navmeshVertices.Count > 0)
+        {
+            if (message.navmeshVertices.Count % 9 != 0)
+            {
+                Debug.LogError($"Ignoring keyframe.message.navmeshVertices with Count == {message.navmeshVertices.Count}. Length should be a multiple of 9.");
+            }
+            else
+            {
+                // convert to Vector3[]
+                Vector3[] vectorArray = new Vector3[message.navmeshVertices.Count / 3];
+                for (int i = 0; i < message.navmeshVertices.Count; i += 3)
+                {
+                    vectorArray[i / 3] = CoordinateSystem.ToUnityVector(message.navmeshVertices[i], message.navmeshVertices[i + 1], message.navmeshVertices[i + 2]);
+                }
+
+                // it's too error-prone to expect the server to know the
+                // correct winding order for Unity raycasts, so let's do
+                // double-sided.
+                bool doDoublesided = true;
+                UpdateNavmesh(vectorArray, doDoublesided);
+            }
+        }
     }
 
     public void UpdateNavmesh(Vector3[] vertices, bool doDoublesided)
@@ -85,17 +112,20 @@ public class NavmeshHelper : MonoBehaviour
     }
 
 
-    void Start()
+    void Awake()
     {
-        // todo: instead of requiring these components, this class should
-        // programmatically create them. See
-        // https://app.asana.com/0/1205278804336681/1205931235223778
-        _teleportationArea = GetComponent<TeleportationArea>();
-        Assert.IsTrue(_teleportationArea);  // our object should have a TeleportationArea
-
-        _meshCollider = GetComponent<MeshCollider>();
-        Assert.IsTrue(_meshCollider);
-        Assert.IsTrue(_teleportationArea.colliders.Count == 1);
+        _navmeshObject = new GameObject("Navmesh");
+        _meshCollider = _navmeshObject.AddComponent<MeshCollider>();
+        _teleportationArea = _navmeshObject.AddComponent<TeleportationArea>();
+        _teleportationArea.colliders.Add(_meshCollider);
+        _teleportationArea.interactionLayers = InteractionLayerMask.NameToLayer("Teleport");
+        _teleportationArea.distanceCalculationMode = XRBaseInteractable.DistanceCalculationMode.ColliderPosition;
+        _teleportationArea.selectMode = InteractableSelectMode.Multiple;
+        _teleportationArea.focusMode = InteractableFocusMode.Single;
+        _teleportationArea.matchOrientation = MatchOrientation.WorldSpaceUp;
+        _teleportationArea.matchDirectionalInput = true;
+        _teleportationArea.teleportTrigger = BaseTeleportationInteractable.TeleportTrigger.OnSelectExited;
+        _teleportationArea.filterSelectionByHitNormal = false;
 
         // By default, we use a ground plane as the navmesh. This allows
         // basically unrestricted teleportation.

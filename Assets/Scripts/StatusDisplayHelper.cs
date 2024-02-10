@@ -1,9 +1,7 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class StatusDisplayHelper : MonoBehaviour
+public class StatusDisplayHelper : MonoBehaviour, IKeyframeMessageConsumer
 {
     const float UI_GAZE_FOLLOWING_SPEED = 10.0f;
 
@@ -28,13 +26,13 @@ public class StatusDisplayHelper : MonoBehaviour
     Coroutine _networkStatusIconCoroutine = null;
     Coroutine _sceneChangeCoroutine = null;
 
-    void Awake()
+    void Start()
     {
         offlineIcon.SetActive(false);
         _networkClient = GetComponent<NetworkClient>();
         if (_networkClient == null)
         {
-            Debug.LogWarning($"Network client missing from '{name}'. Network status updates will be ignored.");
+            Debug.LogWarning($"Network client missing from the scene. Network status updates will be ignored.");
         }
         _ambientColor = RenderSettings.ambientLight;
         _iconTargetTransform = new GameObject("Icon target transform").transform;
@@ -137,7 +135,23 @@ public class StatusDisplayHelper : MonoBehaviour
         RenderSettings.fog = false;
     }
 
-    float EaseInCubic(float x) {
+    static float EaseInCubic(float x) {
         return x * x * x;
+    }
+
+    public void ProcessMessage(Message message)
+    {
+        if (message.sceneChanged)
+        {
+            OnSceneChangeBegin();
+        }
+    }
+
+    public void PostProcessMessage(Message message)
+    {
+        if (message.sceneChanged)
+        {
+            OnSceneChangeEnd();
+        }
     }
 }
