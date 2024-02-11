@@ -61,10 +61,25 @@ public class TextConsumer : MessageConsumer
                 textInstance.enabled = true;
                 textInstance.text = text.text;
 
+                // hack matches Canvas Scaler Reference Resolution
+                int canvasReferenceResolutionX = 928;
+                int canvasReferenceResolutionY = 600;
+
+                // center horizontally
+                textInstance.rectTransform.pivot = new Vector2(
+                    (text.position[0] + 0.5f),
+                    1.0f);
+
                 textInstance.rectTransform.anchoredPosition = new Vector2(
-                    Camera.main.pixelWidth * text.position[0],
-                    Camera.main.pixelHeight * text.position[1]
+                    canvasReferenceResolutionX * text.position[0],
+                    canvasReferenceResolutionY * text.position[1]
                 );
+
+                // adjust rect width to match text width
+                float padding = 0f; // Adjust padding as needed
+                Vector2 backgroundSize = textInstance.rectTransform.sizeDelta;
+                backgroundSize.x = textInstance.preferredWidth + padding;
+                textInstance.rectTransform.sizeDelta = backgroundSize;
             }
         }
     }
