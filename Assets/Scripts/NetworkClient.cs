@@ -32,6 +32,8 @@ public class NetworkClient : MonoBehaviour
     private int currentServerIndex = 0;
     private int messagesReceivedCount = 0;
     private int frameCount = 0;
+    private float _delayReconnect = 0.0f;
+    private string _disconnectReason = "";
 
     private GfxReplayPlayer _player;
     private ConfigLoader _configLoader;
@@ -43,6 +45,8 @@ public class NetworkClient : MonoBehaviour
 
     ClientState _clientState = new ClientState();
     InputTracker[] _inputTrackers;
+    TextConsumer _textConsumer;  // used to display disconnect status
+    int _recentConnectionMessageCount = 0;
 
     JsonSerializerSettings _jsonSettings = new JsonSerializerSettings
     {
@@ -82,6 +86,8 @@ public class NetworkClient : MonoBehaviour
                 Debug.LogError($"Invalid server_port: '{serverPort}'");
             }
         }
+
+        _textConsumer = GetComponent<TextConsumer>();
     }
 
     void Start()
@@ -106,9 +112,9 @@ public class NetworkClient : MonoBehaviour
             string adjustedLocation = location;
             if (!adjustedLocation.Contains(":"))
             {
-                adjustedLocation += ":" + _serverPortOverride != null ?
+                adjustedLocation += ":" + (_serverPortOverride != null ?
                                             _serverPortOverride.Value :
-                                            defaultServerPort;
+                                            defaultServerPort);
             }
 
             bool isHttps = false;
@@ -141,6 +147,21 @@ public class NetworkClient : MonoBehaviour
         {
             if (mainWebSocket == null)
             {
+                if (_delayReconnect > 0.0f)
+                {
+                    Debug.Log($"Delaying reconnect for {_delayReconnect}s");
+                    int numWaits = (int)_delayReconnect;
+                    for (int i = 0; i < numWaits; i++)
+                    {
+                        int remainingTime = numWaits - i;
+                        SetDisconnectStatus($"{_disconnectReason}\nRetrying in {remainingTime}s...");
+                        yield return new WaitForSeconds(1.0f);
+                    }
+                    SetDisconnectStatus("");
+                    _delayReconnect = 0.0f;
+                    _disconnectReason = "";
+                }
+
                 currentServerIndex++;
                 if (currentServerIndex >= _serverURLs.Count)
                 {
@@ -161,6 +182,7 @@ public class NetworkClient : MonoBehaviour
 
                 if (mainWebSocket == null && websocket.State == WebSocketState.Connecting)
                 {
+                    SetDisconnectStatus("Trying to reach servers...");
                     // Wait another 4s
                     yield return new WaitForSeconds(4);
                 }
@@ -174,6 +196,12 @@ public class NetworkClient : MonoBehaviour
                     // See OnOpen callback in ConnectWebSocket where we check
                     // this flag and potentially discard the connection.
                     doAbort.SetFlag();
+
+                    if (_disconnectReason == "")
+                    {
+                        _delayReconnect = 5.0f;
+                        _disconnectReason = "Unable to reach servers!";
+                    }
                 }
             }
             else
@@ -197,12 +225,13 @@ public class NetworkClient : MonoBehaviour
             }
 
             Debug.Log("Connected to: " + url);
+            _recentConnectionMessageCount = 0;
 
-            websocket.SendText("client ready!");
+            // send connection params
+            _connectionParams["isClientReady"] = "1";  // sloppy: set to string "1" instead of True
+            string jsonStr = JsonConvert.SerializeObject(_connectionParams, Formatting.None, _jsonSettings);
+            websocket.SendText(jsonStr);
             Debug.Log("Sent message: client ready!");
-
-            // delete all old instances on (re)connect
-            _player.DeleteAllInstancesFromKeyframes();
 
             mainWebSocket = websocket;
         };
@@ -218,14 +247,37 @@ public class NetworkClient : MonoBehaviour
             {
                 Debug.Log("Main connection closed!");
                 mainWebSocket = null;
+                SetDisconnectStatus("");
+
+                const int messageThreshold = 10;
+
+                // delay reconnect after close, to avoid spamming servers and to give other clients a chance to connect
+                if (_recentConnectionMessageCount >= messageThreshold)
+                {
+                    // This was a long-lasting connection. Disconnected most likely due to client idle.
+                    _disconnectReason = "Disconnected!";
+                    _delayReconnect = 15.0f;
+                }
+                else
+                {
+                    // This was a short connection. Disconnected most likely due to server already having a client.
+                    _disconnectReason = "All servers are busy!";
+                    _delayReconnect = 10.0f;
+                }
             }
         };
 
         websocket.OnMessage += (bytes) =>
         {
+            if (_recentConnectionMessageCount == 0) {
+                // delete all old instances on reconnect
+                _player.DeleteAllInstancesFromKeyframes();
+            }
+
             string message = System.Text.Encoding.UTF8.GetString(bytes);
             ProcessReceivedKeyframes(message);
             messagesReceivedCount++;
+            _recentConnectionMessageCount++;
         };
 
         await websocket.Connect();
@@ -288,19 +340,31 @@ public class NetworkClient : MonoBehaviour
         }
     }
 
+    void SetDisconnectStatus(string status)
+    {
+        if (!_textConsumer)
+        {
+            return;
+        }
+
+        Message message = new Message();
+
+        if (!String.IsNullOrEmpty(status))
+        {
+            Text text = new Text();
+            text.text = status;
+            text.position = new List<float> { 0.0f, 0.3f }; // roughly centered
+            message.texts = new List<Text> { text };
+        }
+        _textConsumer.ProcessMessage(message);
+    }
+
     async void SendClientState()
     {
         if (isConnected())
         {
             // Update the ClientState data.
             UpdateClientState();
-
-            // In the first message, include the connection parameters (URL query string)
-            _clientState.connection_params_dict = _connectionParams;
-            if (_connectionParams?.Count > 0)
-            {
-                _connectionParams = null;
-            }
 
             // Serialize the ClientState data to JSON.
             string jsonStr = JsonConvert.SerializeObject(_clientState, Formatting.None, _jsonSettings);
@@ -337,6 +401,7 @@ public class NetworkClient : MonoBehaviour
     {
         var output  = new Dictionary<string, string>();
 
+        // example: http://localhost:49603/?server_hostname=127.0.0.1&server_port=8888&workername=eric
         string url = Application.absoluteURL;
         if (url?.Length > 0)
         {
