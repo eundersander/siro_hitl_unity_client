@@ -25,8 +25,9 @@ public class GfxReplayPlayer : MonoBehaviour
     private float _keyframeInterval = 0.1f;  // assume 10Hz, but see also SetKeyframeRate
     const bool _useKeyframeInterpolation = true;
 
-    void Awake()
+    void Start()
     {
+        // hack: scrape all MessageConsumers once here in Start, on the assumption that no more are added later.
         _messageConsumers = GetComponents<MessageConsumer>();
     }
 

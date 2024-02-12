@@ -41,12 +41,14 @@ public class NetworkClient : MonoBehaviour
     Dictionary<string, string> _connectionParams;
 
     string? _serverHostnameOverride = null;
-    int? _serverPortOverride = null;
+    int? _serverPortRangeMin = null;
+    int? _serverPortRangeMax = null;
 
     ClientState _clientState = new ClientState();
     InputTracker[] _inputTrackers;
     TextConsumer _textConsumer;  // used to display disconnect status
     int _recentConnectionMessageCount = 0;
+    ServerKeyframeIdHandler _serverKeyframeIdHandler;
 
     JsonSerializerSettings _jsonSettings = new JsonSerializerSettings
     {
@@ -79,7 +81,8 @@ public class NetworkClient : MonoBehaviour
         {
             if (int.TryParse(serverPort, out int port))
             {
-                _serverPortOverride = port;
+                _serverPortRangeMin = port;
+                _serverPortRangeMax = port;
             }
             else
             {
@@ -87,7 +90,24 @@ public class NetworkClient : MonoBehaviour
             }
         }
 
+        // Override server port from query arguments.
+        if (_connectionParams.TryGetValue("server_port_range", out string serverPortRange))
+        {
+            string[] parts = serverPortRange.Split('-');
+            if (parts.Length == 2 && int.TryParse(parts[0], out int startPort) && int.TryParse(parts[1], out int endPort))
+            {
+                _serverPortRangeMin = startPort;
+                _serverPortRangeMax = endPort;
+            }
+            else
+            {
+                Debug.LogError($"Invalid server_port_range: '{serverPortRange}'");
+            }
+        }
+
         _textConsumer = GetComponent<TextConsumer>();
+
+        _serverKeyframeIdHandler = gameObject.AddComponent<ServerKeyframeIdHandler>();
     }
 
     void Start()
@@ -106,23 +126,34 @@ public class NetworkClient : MonoBehaviour
         string[] serverLocations = _serverHostnameOverride != null ? 
                                         new[]{_serverHostnameOverride} : 
                                         _configLoader.AppConfig.serverLocations;
+
+        if (_serverPortRangeMin == null)
+        {
+            _serverPortRangeMin = defaultServerPort;
+            _serverPortRangeMax = defaultServerPort;
+        }
+
+        bool isHttps = false;
+        string wsProtocol = isHttps ? "wss" : "ws";
         Assert.IsTrue(serverLocations.Length > 0);
         foreach (string location in serverLocations)
         {
-            string adjustedLocation = location;
-            if (!adjustedLocation.Contains(":"))
+            if (!location.Contains(":"))
             {
-                adjustedLocation += ":" + (_serverPortOverride != null ?
-                                            _serverPortOverride.Value :
-                                            defaultServerPort);
+                for (int port = (int)_serverPortRangeMin; port <= _serverPortRangeMax; port++)
+                {
+                    string adjustedLocation = location + ":" + port;
+                    _serverURLs.Add($"{wsProtocol}://{adjustedLocation}");
+                }
+            } else
+            {
+                _serverURLs.Add($"{wsProtocol}://{location}");
             }
-
-            bool isHttps = false;
-            string wsProtocol = isHttps ? "wss" : "ws";
-            _serverURLs.Add($"{wsProtocol}://{adjustedLocation}");
         }
+        currentServerIndex = UnityEngine.Random.Range(0, _serverURLs.Count);
 
-        StartCoroutine(TryConnectToServers());
+
+    StartCoroutine(TryConnectToServers());
 
         StartCoroutine(LogMessageRate());
 
@@ -154,7 +185,8 @@ public class NetworkClient : MonoBehaviour
                     for (int i = 0; i < numWaits; i++)
                     {
                         int remainingTime = numWaits - i;
-                        SetDisconnectStatus($"{_disconnectReason}\nRetrying in {remainingTime}s...");
+                        string retryDesc = _serverURLs.Count == 1 ? "Retrying" : "Trying another server";
+                        SetDisconnectStatus($"{_disconnectReason}\n{retryDesc} in {remainingTime}s...");
                         yield return new WaitForSeconds(1.0f);
                     }
                     SetDisconnectStatus("");
@@ -177,12 +209,12 @@ public class NetworkClient : MonoBehaviour
                 // still on the main Unity thread).
                 var connectTask = ConnectWebSocket(websocket, url, doAbort);
 
-                // Wait for 4s, then check the result
-                yield return new WaitForSeconds(4);
+                // Wait for 2s, then check the result
+                yield return new WaitForSeconds(2);
 
                 if (mainWebSocket == null && websocket.State == WebSocketState.Connecting)
                 {
-                    SetDisconnectStatus("Trying to reach servers...");
+                    SetDisconnectStatus("Trying to reach server...");
                     // Wait another 4s
                     yield return new WaitForSeconds(4);
                 }
@@ -199,8 +231,8 @@ public class NetworkClient : MonoBehaviour
 
                     if (_disconnectReason == "")
                     {
-                        _delayReconnect = 5.0f;
-                        _disconnectReason = "Unable to reach servers!";
+                        _delayReconnect = _serverURLs.Count == 1 ? 5.0f : 2.0f;
+                        _disconnectReason = "Unable to reach server!";
                     }
                 }
             }
@@ -261,8 +293,8 @@ public class NetworkClient : MonoBehaviour
                 else
                 {
                     // This was a short connection. Disconnected most likely due to server already having a client.
-                    _disconnectReason = "All servers are busy!";
-                    _delayReconnect = 10.0f;
+                    _disconnectReason = "Server is busy!";
+                    _delayReconnect = _serverURLs.Count == 1 ? 10.0f : 3.0f;
                 }
             }
         };
@@ -338,6 +370,11 @@ public class NetworkClient : MonoBehaviour
         {
             updater.UpdateClientState(ref _clientState);
         }
+
+        if (_serverKeyframeIdHandler.recentServerKeyframeId != null)
+        {
+            _clientState.recentServerKeyframeId = _serverKeyframeIdHandler.recentServerKeyframeId;
+        }
     }
 
     void SetDisconnectStatus(string status)
@@ -403,6 +440,7 @@ public class NetworkClient : MonoBehaviour
 
         // example: http://localhost:49603/?server_hostname=127.0.0.1&server_port=8888&workername=eric
         string url = Application.absoluteURL;
+        // string url = "http://localhost:49603/?server_hostname=54.193.214.241&server_port_range=8098-8100";
         if (url?.Length > 0)
         {
             var splitUrl = url.Split('?');
@@ -419,5 +457,17 @@ public class NetworkClient : MonoBehaviour
         }
 
         return output;
+    }
+}
+
+public class ServerKeyframeIdHandler : MessageConsumer
+{
+    public int? recentServerKeyframeId = null;
+
+    public override void ProcessMessage(Message message)
+    {
+        if (!enabled) return;
+
+        recentServerKeyframeId = message.serverKeyframeId;
     }
 }

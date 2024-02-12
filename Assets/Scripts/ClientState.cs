@@ -9,8 +9,7 @@ public class ClientState
     public AvatarData avatar;
     public ButtonInputData input; // TODO: Separate VR and keyboard input.
     public MouseInputData mouse;
-
-    public Dictionary<string, string> connection_params_dict;
+    public int? recentServerKeyframeId = null;
 }
 
 [Serializable]

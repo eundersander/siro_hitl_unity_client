@@ -91,6 +91,8 @@ public class Message
     public AbsTransform camera;
 
     public bool isAppReady;
+
+    public int serverKeyframeId;
 }
 
 [Serializable]
