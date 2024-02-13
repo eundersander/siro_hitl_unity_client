@@ -71,20 +71,40 @@ public class HighlightManager : MessageConsumer
         }
         // Draw highlights
         var highlightsMessage = message.highlights;
+        Vector3 up = new Vector3(0, 1, 0);
+        Color defaultColor = Color.white;
         if (highlightsMessage != null)
         {
             _activeHighlightCount = Math.Min(highlightsMessage.Length, _highlightPool.Length);
             for (int i = 0; i < _activeHighlightCount; ++i)
             {
+                Highlight msg = highlightsMessage[i];
                 var highlight = _highlightPool[i];
                 highlight.enabled = true;
 
+                Color color = defaultColor;
+                if (msg.c != null && msg.c.Length == 4)
+                {
+                    color.r = (float)msg.c[0] / 255.0f;
+                    color.g = (float)msg.c[1] / 255.0f;
+                    color.b = (float)msg.c[2] / 255.0f;
+                    color.a = (float)msg.c[3] / 255.0f;
+                }
+                highlight.startColor = color;
+                highlight.endColor = color;
+
                 // Apply translation from message
-                Vector3 center = CoordinateSystem.ToUnityVector(highlightsMessage[i].t);
+                Vector3 center = CoordinateSystem.ToUnityVector(msg.t);
                 highlight.transform.position = center;
 
                 // Billboarding
-                highlight.transform.LookAt(Camera.main.transform);
+                if (msg.b == 1)
+                {
+                    highlight.transform.LookAt(Camera.main.transform);
+                } else
+                {
+                    highlight.transform.LookAt(center + up);
+                }
 
                 // Apply radius from message using scale
                 highlight.transform.localScale = highlightsMessage[i].r * Vector3.one;

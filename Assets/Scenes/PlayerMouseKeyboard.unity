@@ -423,7 +423,7 @@ MonoBehaviour:
   highlightMaterials:
   - {fileID: 2100000, guid: 8271dc041bee6326ea86b838c5220c8f, type: 2}
   - {fileID: 2100000, guid: 10063642764bd84a8b91c294f1500d8b, type: 2}
-  highlightWidth: 0.01
+  highlightWidth: 0.015
   highlightBaseRadius: 1
 --- !u!114 &695650941
 MonoBehaviour:

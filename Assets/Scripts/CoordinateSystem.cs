@@ -30,6 +30,15 @@ public static class CoordinateSystem
         );
     }
 
+    public static Vector3 ToUnityVector(float[] translation)
+    {
+        return new Vector3(
+            translation[0],
+            translation[1],
+            -translation[2]
+        );
+    }
+
     // TODO: Rename and document that this variant is only for model manipulation.
     public static Quaternion ToUnityQuaternion(List<float> rotation)
     {
