@@ -107,7 +107,7 @@ public class GfxReplayPlayer : MonoBehaviour
                     GameObject instance = _instanceDictionary[update.instanceKey];
 
                     Vector3 translation = CoordinateSystem.ToUnityVector(update.state.absTransform.translation);
-                    Quaternion rotation = CoordinateSystem.ToUnityQuaternion(update.state.absTransform.rotation);
+                    Quaternion rotation = CoordinateSystem.ToUnityQuaternion3DModel(update.state.absTransform.rotation);
 
                     instance.transform.position = translation;
                     instance.transform.rotation = rotation;
@@ -127,7 +127,7 @@ public class GfxReplayPlayer : MonoBehaviour
                     GameObject instance = _instanceDictionary[update.instanceKey];
 
                     Vector3 newTranslation = CoordinateSystem.ToUnityVector(update.state.absTransform.translation);
-                    Quaternion newRotation = CoordinateSystem.ToUnityQuaternion(update.state.absTransform.rotation);
+                    Quaternion newRotation = CoordinateSystem.ToUnityQuaternion3DModel(update.state.absTransform.rotation);
 
                     // Check if the instance is at the origin
                     if (instance.transform.position == Vector3.zero)
