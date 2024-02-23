@@ -53,6 +53,13 @@ public class Frame
 }
 
 [Serializable]
+public class AbsTransform
+{
+    public List<float> translation;
+    public List<float> rotation;
+}
+
+[Serializable]
 public class CreationItem
 {
     public int instanceKey;
@@ -78,13 +85,6 @@ public class StateUpdate
     {
         public AbsTransform absTransform;
         public int semanticId;
-
-        [Serializable]
-        public class AbsTransform
-        {
-            public List<float> translation;
-            public List<float> rotation;
-        }
     }
 }
 
@@ -121,6 +121,8 @@ public class Message
     public List<float> navmeshVertices;
 
     public string textMessage;
+
+    public AbsTransform camera;
 }
 
 [Serializable]
