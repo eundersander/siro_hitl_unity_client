@@ -53,13 +53,6 @@ public class Frame
 }
 
 [Serializable]
-public class AbsTransform
-{
-    public List<float> translation;
-    public List<float> rotation;
-}
-
-[Serializable]
 public class CreationItem
 {
     public int instanceKey;
