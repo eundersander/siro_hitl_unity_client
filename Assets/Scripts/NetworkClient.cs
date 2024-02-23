@@ -54,7 +54,7 @@ public class NetworkClient : MonoBehaviour
         MissingMemberHandling = MissingMemberHandling.Ignore
     };
 
-    void Awake()
+    void Start()
     {
         _player = GetComponent<GfxReplayPlayer>();
         Assert.IsTrue(_player);  // our object should have a GfxReplayPlayer
@@ -68,10 +68,7 @@ public class NetworkClient : MonoBehaviour
         {
             Debug.LogWarning("No IClientStateProducer could be found. The client won't send any data to the server.");
         }
-    }
-
-    void Start()
-    {
+        
         // Read URL query parameters
         _connectionParams = GetConnectionParameters();
 
