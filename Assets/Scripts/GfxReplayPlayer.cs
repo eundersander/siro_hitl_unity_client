@@ -170,7 +170,7 @@ public class GfxReplayPlayer : IUpdatable
         {
             ProcessStateUpdatesForInterpolation(keyframe);
         }
-        // Suppress unreachable code.
+        // Suppress 'Unreachable Code' warning.
         #pragma warning disable 0162 
         else
         {

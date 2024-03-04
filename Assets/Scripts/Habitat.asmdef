@@ -1,0 +1,23 @@
+{
+    "name": "Habitat",
+    "rootNamespace": "",
+    "references": [
+        "endel.nativewebsocket",
+        "Unity.InputSystem",
+        "Unity.TextMeshPro",
+        "Unity.XR.CoreUtils",
+        "Unity.XR.Interaction.Toolkit.Samples.DeviceSimulator",
+        "Unity.XR.Interaction.Toolkit.Samples.StarterAssets",
+        "Unity.XR.Interaction.Toolkit",
+        "Unity.XR.Management"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

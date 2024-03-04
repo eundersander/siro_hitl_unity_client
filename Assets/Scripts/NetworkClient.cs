@@ -65,11 +65,9 @@ public class NetworkClient : IUpdatable
         _coroutines = CoroutineContainer.Create("NetworkClient");
         
         // Read URL query parameters
-        _connectionParams = GetConnectionParameters();
-
-        GetServerHostnameAndPort(_connectionParams, 
-                                 out string _serverHostnameOverride,
-                                 out int? _serverPortOverride);
+        _connectionParams = ConnectionParameters.GetConnectionParameters(Application.absoluteURL);
+        var _serverHostnameOverride = ConnectionParameters.GetServerHostname(_connectionParams);
+        var _serverPortOverride = ConnectionParameters.GetServerPort(_connectionParams);
 
         // Set up server hostnames and port.
         string[] serverLocations = _serverHostnameOverride != null ? 
@@ -334,62 +332,5 @@ public class NetworkClient : IUpdatable
     public bool IsConnected() 
     {
         return mainWebSocket != null && mainWebSocket.State == WebSocketState.Open;
-    }
-
-    private Dictionary<string, string> GetConnectionParameters()
-    {
-        var output  = new Dictionary<string, string>();
-
-        string url = Application.absoluteURL;
-        if (url?.Length > 0)
-        {
-            var splitUrl = url.Split('?');
-            if (splitUrl.Length == 2)
-            {
-                var queryString = splitUrl[1];
-                var paramsCollection = HttpUtility.ParseQueryString(queryString);
-
-                foreach (var key in paramsCollection.AllKeys)
-                {
-                    output[key] = paramsCollection[key];
-                }
-            }
-        }
-
-        return output;
-    }
-
-    private void GetServerHostnameAndPort(Dictionary<string, string> queryParams,                                   
-                                         out string _serverHostnameOverride,
-                                         out int? _serverPortOverride)
-    {
-        _serverHostnameOverride = null;
-        _serverPortOverride = null;
-
-        // Override server URL from query arguments.
-        if (queryParams.TryGetValue("server_hostname", out string serverHostnameString))
-        {
-            if (Uri.CheckHostName(serverHostnameString) != UriHostNameType.Unknown)
-            {
-                _serverHostnameOverride = serverHostnameString;
-            }
-            else
-            {
-                Debug.LogError($"Invalid server_hostname: '{serverHostnameString}'");
-            }
-        }
-
-        // Override server port from query arguments.
-        if (queryParams.TryGetValue("server_port", out string serverPortString))
-        {
-            if (int.TryParse(serverPortString, out int port))
-            {
-                _serverPortOverride = port;
-            }
-            else
-            {
-                Debug.LogError($"Invalid server_port: '{serverPortString}'");
-            }
-        }
     }
 }
