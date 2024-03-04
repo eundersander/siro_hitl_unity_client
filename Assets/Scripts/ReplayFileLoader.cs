@@ -2,30 +2,31 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Assertions;
 
-public class ReplayFileLoader : MonoBehaviour
+public class ReplayFileLoader : IUpdatable
 {
-    [SerializeField]
-    private TextAsset jsonFile; // Drag your JSON file onto this field in the inspector
-
+    private bool _enabled = true;
     private KeyframeWrapper _keyframeWrapper;
     private GfxReplayPlayer _player;
     private int _nextKeyframeIdx = 0;
 
-    void Start()
+    public ReplayFileLoader(GfxReplayPlayer player, TextAsset keyframes)
     {
-        _player = GetComponent<GfxReplayPlayer>();
-        Assert.IsTrue(_player);  // our object should have a GfxReplayPlayer
+        if (keyframes == null)
+        {
+            _enabled = false;
+            return;
+        }
+        _player = player;
 
-        _keyframeWrapper = JsonUtility.FromJson<KeyframeWrapper>(jsonFile.text);
-
+        _keyframeWrapper = JsonUtility.FromJson<KeyframeWrapper>(keyframes.text);
         Assert.IsTrue(_keyframeWrapper.keyframes.Length > 0);
-        _nextKeyframeIdx = 0;
+
         NextKeyframe();
     }
 
     private void NextKeyframe()
     {
-        if (_nextKeyframeIdx >= _keyframeWrapper.keyframes.Length)
+        if (!_enabled || _nextKeyframeIdx >= _keyframeWrapper.keyframes.Length)
         {
             return;
         }
@@ -34,12 +35,15 @@ public class ReplayFileLoader : MonoBehaviour
         _nextKeyframeIdx++;
     }
 
-    void Update()
+    public void Update()
     {
-        // if (Keyboard.current.spaceKey.wasPressedThisFrame)
+        if (!_enabled)
+        {
+            return;
+        }
         if (Keyboard.current.spaceKey.isPressed)
         {
-                NextKeyframe();
+            NextKeyframe();
         }
     }
 }

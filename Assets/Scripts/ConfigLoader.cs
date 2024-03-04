@@ -1,25 +1,23 @@
-using System.IO;
-using UnityEngine;
-
-public class ConfigLoader : MonoBehaviour
+/// <summary>
+/// Loads a configuration from file.
+/// Config defaults are used directly when running in the Editor. On device, they are used to populate config.txt at Android/data/com.meta.siro_hitl_vr_client/files/.
+/// This file persists and can be edited between runs, e.g. by connecting via USB to a laptop.
+/// </summary>
+public class ConfigLoader
 {
     [System.Serializable]
     public class Config
     {
         public string[] serverLocations;
-        // public int visualQuality;
     }
 
-    [Header("Config Defaults")]
-    [Tooltip("Config defaults are used directly when running in the Editor. On device, they are used to populate config.txt at Android/data/com.meta.siro_hitl_vr_client/files/. This file persists and can be edited between runs, e.g. by connecting via USB to a laptop.")]
-    [SerializeField]
-    private bool _mouseoverForTooltip;  // dummy member so we can add tooltip in Inspector pane
-    [Space(10)] // Add a little spacing for clarity
-
-    [SerializeField] private string[] defaultServerLocations = { "127.0.01:8888" };
-    // [SerializeField] private int defaultVisualQuality = 2;
-
     private Config _config;
+    private string[] _serverLocations;
+
+    public ConfigLoader(string[] serverLocations)
+    {
+        _serverLocations = serverLocations;
+    }
 
     public Config AppConfig
     {
@@ -59,8 +57,7 @@ public class ConfigLoader : MonoBehaviour
     {
         return new Config
         {
-            serverLocations = defaultServerLocations,
-            // visualQuality = defaultVisualQuality
+            serverLocations = _serverLocations,
         };
     }
 }

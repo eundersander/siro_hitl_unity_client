@@ -1,7 +1,7 @@
 /// <summary>
 /// Component that consumes keyframe messages to alter the client state.
 /// </summary>
-public interface IKeyframeMessageConsumer
+public interface IKeyframeMessageConsumer : IUpdatable
 {
     /// <summary>
     /// Process a message.

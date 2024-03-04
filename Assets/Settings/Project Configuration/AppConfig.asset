@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d73e0c67c1ceab24b9efa5e137d993aa, type: 3}
+  m_Name: AppConfig
+  m_EditorClassIdentifier: 
+  poolSize: 32
+  circleResolution: 32
+  highlightColor: {r: 1, g: 1, b: 1, a: 1}
+  highlightMaterials:
+  - {fileID: 2100000, guid: 8271dc041bee6326ea86b838c5220c8f, type: 2}
+  - {fileID: 2100000, guid: 10063642764bd84a8b91c294f1500d8b, type: 2}
+  highlightWidth: 0.015
+  highlightBaseRadius: 1

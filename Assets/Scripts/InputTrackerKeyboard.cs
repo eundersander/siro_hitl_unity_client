@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class InputTrackerKeyboard : MonoBehaviour, IClientStateProducer
+public class InputTrackerKeyboard : IClientStateProducer
 {
     // Physical keys from USB HID Usage Tables
     // https://www.usb.org/sites/default/files/documents/hut1_12v2.pdf, page 53
@@ -118,7 +118,7 @@ public class InputTrackerKeyboard : MonoBehaviour, IClientStateProducer
     bool[] _buttonUp;
     bool[] _buttonDown;
 
-    void Awake()
+    public InputTrackerKeyboard()
     {
         // Bake the dict into an array for faster lookups.
         _keyMap = new int[KEY_COUNT];

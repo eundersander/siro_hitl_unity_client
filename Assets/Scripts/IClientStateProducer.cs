@@ -1,7 +1,7 @@
 /// <summary>
 /// Component that produces ClientState data.
 /// </summary>
-public interface IClientStateProducer
+public interface IClientStateProducer : IUpdatable
 {
     /// <summary>
     /// Gather all inputs that occurred since the last OnEndFrame() call.

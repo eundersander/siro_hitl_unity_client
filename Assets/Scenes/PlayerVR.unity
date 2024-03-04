@@ -133,15 +133,6 @@ GameObject:
   m_Component:
   - component: {fileID: 695650931}
   - component: {fileID: 695650944}
-  - component: {fileID: 695650934}
-  - component: {fileID: 695650937}
-  - component: {fileID: 695650943}
-  - component: {fileID: 695650942}
-  - component: {fileID: 695650941}
-  - component: {fileID: 695650940}
-  - component: {fileID: 695650939}
-  - component: {fileID: 695650938}
-  - component: {fileID: 695650945}
   m_Layer: 0
   m_Name: App
   m_TagString: Untagged
@@ -164,125 +155,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &695650934
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 695650929}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 693101b9e8a87412bb5a2587ed7c0a8e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  jsonFile: {fileID: 4900000, guid: dc0d38034b864e8f980251247bc88361, type: 3}
---- !u!114 &695650937
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 695650929}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 887d79a418cbc4c15bacfe9983a11b44, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _mouseoverForTooltip: 0
-  defaultServerLocations:
-  - 127.0.0.1:8888
---- !u!114 &695650938
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 695650929}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 896ab93939677a0e5a9ef01896dbbfc5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  xrHeadObject: {fileID: 1708247983}
-  xrLeftControllerObject: {fileID: 2075813056}
-  xrRightControllerObject: {fileID: 1032753413}
---- !u!114 &695650939
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 695650929}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d085904195cee88278f8dda6b08bdc05, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &695650940
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 695650929}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 875f92e9cac9b42dc9c663d23316fba4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  uiPlaneDistance: 20
-  textPanelRoot: {fileID: 897124556}
-  textComponent: {fileID: 897124558}
---- !u!114 &695650941
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 695650929}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3a9ca0482bed2e52c9ea6d9b0141e5cb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  offlineIcon: {fileID: 1473937394}
-  offlineIconDisplayTime: 5
-  uiPlaneDistance: 3
---- !u!114 &695650942
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 695650929}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8dc206cd601dc6f70b3d0f2a7d129d4a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  xrCameraNode: {fileID: 1708247983}
-  xrOriginNode: {fileID: 2109134565}
---- !u!114 &695650943
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 695650929}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9854ce71fd64f9c72aff21a8e6a1fc6c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  poolSize: 32
-  circleResolution: 32
-  highlightColor: {r: 1, g: 1, b: 1, a: 1}
-  highlightMaterials:
-  - {fileID: 2100000, guid: 8271dc041bee6326ea86b838c5220c8f, type: 2}
-  - {fileID: 2100000, guid: 10063642764bd84a8b91c294f1500d8b, type: 2}
-  highlightWidth: 0.01
-  highlightBaseRadius: 1
 --- !u!114 &695650944
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -295,18 +167,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 277d47b734d30bab5a1ae23f7ff61aac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &695650945
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 695650929}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 63d9fe3cbcf2741648f7a194ce451925, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+  _mouseoverForTooltip: 0
+  _defaultServerLocations:
+  - 127.0.01:8888
+  _testKeyframe: {fileID: 0}
+  _camera: {fileID: 878938826}
+  _appConfig: {fileID: 11400000, guid: 5aca4711f6ee3f6faa47e80cb8b6abee, type: 2}
+  _xrLeftController: {fileID: 2075813056}
+  _xrRightController: {fileID: 1032753413}
+  _xrOrigin: {fileID: 2109134565}
+  _offlineIcon: {fileID: 1473937394}
+  _textPanelRoot: {fileID: 897124556}
+  _textComponent: {fileID: 897124558}
+  _textUiPlaneDistance: 20
 --- !u!1001 &878938825
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -383,6 +256,11 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 1708247988}
   m_SourcePrefab: {fileID: 100100000, guid: 895f6f3c2d334633b5800312285058d2, type: 3}
+--- !u!20 &878938826 stripped
+Camera:
+  m_CorrespondingSourceObject: {fileID: 9014170783809206330, guid: 895f6f3c2d334633b5800312285058d2, type: 3}
+  m_PrefabInstance: {fileID: 878938825}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &897124556 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 653004191631979861, guid: 375a41627041cadfe9349ceb36bfe2eb, type: 3}

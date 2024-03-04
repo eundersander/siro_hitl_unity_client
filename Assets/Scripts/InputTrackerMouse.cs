@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class InputTrackerMouse : MonoBehaviour, IClientStateProducer
+public class InputTrackerMouse : IClientStateProducer
 {
     // Left: 0, Right: 1, Middle: 2
     const int MOUSE_BUTTON_COUNT = 3;
@@ -13,7 +13,7 @@ public class InputTrackerMouse : MonoBehaviour, IClientStateProducer
 
     Vector2 _scrollDelta = Vector2.zero;
 
-    void Awake()
+    public InputTrackerMouse()
     {
         // Create arrays that hold whether buttons were pressed since the last OnEndFrame() call.
         _buttonHeld = new bool[MOUSE_BUTTON_COUNT];

@@ -9,8 +9,10 @@ using System.Threading.Tasks;
 
 using System.Web;
 
-public class NetworkClient : MonoBehaviour
+public class NetworkClient : IUpdatable
 {
+    const float CLIENT_STATE_SEND_FREQUENCY = 0.1f;
+
     public class FlagObject
     {
         private bool flag = false;
@@ -41,6 +43,7 @@ public class NetworkClient : MonoBehaviour
 
     ClientState _clientState = new ClientState();
     IClientStateProducer[] _clientStateProducers;
+    CoroutineContainer _coroutines;
 
     // Used to handle data that is only meant to be sent during the first transmission.
     private bool _firstTransmission = true;
@@ -54,26 +57,18 @@ public class NetworkClient : MonoBehaviour
         MissingMemberHandling = MissingMemberHandling.Ignore
     };
 
-    void Start()
+    public NetworkClient(GfxReplayPlayer player, ConfigLoader configLoader, IClientStateProducer[] clientStateProducers)
     {
-        _player = GetComponent<GfxReplayPlayer>();
-        Assert.IsTrue(_player);  // our object should have a GfxReplayPlayer
-        _configLoader = GetComponent<ConfigLoader>();
-        Assert.IsTrue(_configLoader);
-
-        // Search the codebase for available IClientStateProducer.
-        // They should be added to this GameObject via the Editor (or programmatically, before adding this Component).
-        _clientStateProducers = GetComponents<IClientStateProducer>();
-        if (_clientStateProducers.Length == 0)
-        {
-            Debug.LogWarning("No IClientStateProducer could be found. The client won't send any data to the server.");
-        }
+        _player = player;
+        _configLoader = configLoader;
+        _clientStateProducers = clientStateProducers;
+        _coroutines = CoroutineContainer.Create("NetworkClient");
         
         // Read URL query parameters
         _connectionParams = GetConnectionParameters();
 
         GetServerHostnameAndPort(_connectionParams, 
-                                 out string? _serverHostnameOverride,
+                                 out string _serverHostnameOverride,
                                  out int? _serverPortOverride);
 
         // Set up server hostnames and port.
@@ -102,15 +97,18 @@ public class NetworkClient : MonoBehaviour
         }
 
         // Start networking.
-        StartCoroutine(TryConnectToServers());
-        StartCoroutine(LogMessageRate());
-
-        // Keep sending messages at every 0.1s
-        InvokeRepeating("SendClientState", 0.0f, 0.1f);
+        _coroutines.StartCoroutine(TryConnectToServers());
+        _coroutines.StartCoroutine(LogMessageRate());
+        _coroutines.StartCoroutine(SendClientState());
     }
 
-    void Update()
+    public void Update()
     {
+        foreach (var producer in _clientStateProducers)
+        {
+            producer.Update();
+        }
+
         if (mainWebSocket != null)
         {
 #if !UNITY_WEBGL || UNITY_EDITOR
@@ -272,42 +270,54 @@ public class NetworkClient : MonoBehaviour
         }
     }
 
-    async void SendClientState()
+    IEnumerator SendClientState()
     {
-        if (isConnected())
+        var timer = new System.Diagnostics.Stopwatch();
+        while (true)
         {
-            // Update ClientState
-            UpdateClientState();
+            timer.Reset();
+            timer.Start();
 
-            // Only include connection parameters in the first successful transmission.
-            if (_firstTransmission && _connectionParams?.Count > 0)
+            if (isConnected())
             {
-                _clientState.connection_params_dict = _connectionParams;
+                // Update ClientState
+                UpdateClientState();
+
+                // Only include connection parameters in the first successful transmission.
+                if (_firstTransmission && _connectionParams?.Count > 0)
+                {
+                    _clientState.connection_params_dict = _connectionParams;
+                }
+
+                // Serialize ClientState to JSON.
+                string jsonStr = JsonConvert.SerializeObject(_clientState, Formatting.None, _jsonSettings);
+
+                // Reset the state of IClientStateProducers
+                foreach (var updater in _clientStateProducers)
+                {
+                    updater.OnEndFrame();
+                }
+
+                // Send the ClientState to the server.
+                Task task = mainWebSocket.SendText(jsonStr);
+                yield return new WaitUntil(() => task.IsCompleted);
+
+                // Update state after first successful transmission.
+                if (_firstTransmission && task.Status == TaskStatus.RanToCompletion)
+                {
+                    _clientState.connection_params_dict = null;
+                    _firstTransmission = false;
+                }
             }
 
-            // Serialize ClientState to JSON.
-            string jsonStr = JsonConvert.SerializeObject(_clientState, Formatting.None, _jsonSettings);
-
-            // Reset the state of IClientStateProducers
-            foreach (var updater in _clientStateProducers)
-            {
-                updater.OnEndFrame();
-            }
-
-            // Send the ClientState to the server.
-            Task task = mainWebSocket.SendText(jsonStr);
-            await task;
-
-            // Update state after first successful transmission.
-            if (_firstTransmission && task.Status == TaskStatus.RanToCompletion)
-            {
-                _clientState.connection_params_dict = null;
-                _firstTransmission = false;
-            }
+            timer.Stop();
+            float elapsed = (float)timer.Elapsed.TotalSeconds;
+            float waitTime = CLIENT_STATE_SEND_FREQUENCY - Mathf.Min(elapsed, CLIENT_STATE_SEND_FREQUENCY);
+            yield return new WaitForSecondsRealtime(waitTime);
         }
     }
 
-    void OnDestroy()
+    public void OnDestroy()
     {
         if (mainWebSocket != null)
         {
@@ -315,8 +325,10 @@ public class NetworkClient : MonoBehaviour
             mainWebSocket = null;
         }
 
-        StopAllCoroutines();
-        CancelInvoke("SendClientState");
+        if (_coroutines != null)
+        {
+            _coroutines.StopAllCoroutines();
+        }
     }
 
     public bool IsConnected() 
@@ -348,7 +360,7 @@ public class NetworkClient : MonoBehaviour
     }
 
     private void GetServerHostnameAndPort(Dictionary<string, string> queryParams,                                   
-                                         out string? _serverHostnameOverride,
+                                         out string _serverHostnameOverride,
                                          out int? _serverPortOverride)
     {
         _serverHostnameOverride = null;

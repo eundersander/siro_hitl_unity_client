@@ -19,14 +19,14 @@ public class BoolArrayHelper
     }
 }
 
-public class InputTrackerXRControllers : MonoBehaviour, IClientStateProducer
+public class InputTrackerXRControllers : IClientStateProducer
 {
     XRIDefaultInputActions _inputActions;
     ButtonInputData _inputData = new ButtonInputData();
     const int NUM_BUTTONS = 4;
     bool[] _buttonHeld = new bool[4];
 
-    void Awake()
+    public InputTrackerXRControllers()
     {
         for (int buttonId = 0; buttonId < NUM_BUTTONS; buttonId++)
         {
@@ -46,7 +46,7 @@ public class InputTrackerXRControllers : MonoBehaviour, IClientStateProducer
         _inputActions.XRIRightHandInteraction.Select.canceled += RightSelectCallback;
     }
 
-    void Update()
+    public void Update()
     {
         _inputData.buttonHeld = BoolArrayHelper.GetTrueIndices(_buttonHeld);
     }
