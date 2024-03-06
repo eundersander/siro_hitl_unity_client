@@ -19,7 +19,7 @@ public class GfxReplayPlayer : IUpdatable
 
     const bool USE_KEYFRAME_INTERPOLATION = true;
 
-    private Dictionary<int, HabitatInstance> _instanceDictionary = new();
+    private Dictionary<int, GfxReplayInstance> _instanceDictionary = new();
     private Dictionary<string, Load> _loadDictionary = new();
     private Dictionary<int, MovementData> _movementData = new();
     Dictionary<int, GfxReplaySkinnedMesh> _skinnedMeshes = new();
@@ -240,7 +240,7 @@ public class GfxReplayPlayer : IUpdatable
                 }
 
                 string resourcePath = getResourcePath(source);
-                HabitatInstance instance = HabitatInstance.CreateAndLoad(creationItem.instanceKey.ToString(), resourcePath, load.frame);
+                var instance = GfxReplayInstance.CreateAndLoad(creationItem.instanceKey.ToString(), resourcePath, load.frame);
 
                 if (creationItem.creation.scale != null)
                 {
@@ -291,7 +291,7 @@ public class GfxReplayPlayer : IUpdatable
         {
             foreach (var key in keyframe.deletions)
             {
-                if (_instanceDictionary.TryGetValue(key, out HabitatInstance obj))
+                if (_instanceDictionary.TryGetValue(key, out GfxReplayInstance obj))
                 {
                     GfxReplaySkinnedMesh skinnedMesh = obj.GetComponent<GfxReplaySkinnedMesh>();
                     if (skinnedMesh != null)
