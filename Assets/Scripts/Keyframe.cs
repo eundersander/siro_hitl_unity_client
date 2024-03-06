@@ -121,6 +121,9 @@ public class Message
 [Serializable]
 public class Highlight
 {
-    public List<float> t;
-    public float r;
+    // Note: short variable names and values to reduce json data size.
+    public float[] t; // Position
+    public float r; // Radius
+    public int b = 0; // 0 = Face-up, 1 = Billboard (face camera)
+    public int[] c; // Color, RGBA, 0-255
 }

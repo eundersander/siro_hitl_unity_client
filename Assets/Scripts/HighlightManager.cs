@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 public class HighlightManager : IKeyframeMessageConsumer
 {
@@ -33,8 +34,8 @@ public class HighlightManager : IKeyframeMessageConsumer
             lineRenderer.enabled = false;
             lineRenderer.loop = true;
             lineRenderer.useWorldSpace = false;
-            lineRenderer.startColor = config.highlightColor;
-            lineRenderer.endColor = config.highlightColor;
+            lineRenderer.startColor = config.highlightDefaultColor;
+            lineRenderer.endColor = config.highlightDefaultColor;
             lineRenderer.startWidth = config.highlightWidth;
             lineRenderer.endWidth = config.highlightWidth;
             lineRenderer.materials = config.highlightMaterials;
@@ -63,18 +64,38 @@ public class HighlightManager : IKeyframeMessageConsumer
             _activeHighlightCount = Math.Min(highlightsMessage.Length, _highlightPool.Length);
             for (int i = 0; i < _activeHighlightCount; ++i)
             {
-                var highlight = _highlightPool[i];
-                highlight.enabled = true;
+                Highlight msg = highlightsMessage[i];
+                var lineRenderer = _highlightPool[i];
+                lineRenderer.enabled = true;
+
+                Color color = _config.highlightDefaultColor;
+                if (msg.c != null && msg.c.Length > 0)                
+                {
+                    Assert.AreEqual(msg.c.Length, 4, $"Invalid highlight color format. Expected 4 ints, got {msg.c.Length}.");
+                    color.r = (float)msg.c[0] / 255.0f;
+                    color.g = (float)msg.c[1] / 255.0f;
+                    color.b = (float)msg.c[2] / 255.0f;
+                    color.a = (float)msg.c[3] / 255.0f;
+                }
+                lineRenderer.startColor = color;
+                lineRenderer.endColor = color;
 
                 // Apply translation from message
-                Vector3 center = CoordinateSystem.ToUnityVector(highlightsMessage[i].t);
-                highlight.transform.position = center;
+                Vector3 center = CoordinateSystem.ToUnityVector(msg.t);
+                lineRenderer.transform.position = center;
 
                 // Billboarding
-                highlight.transform.LookAt(_camera.transform);
+                if (msg.b == 1)
+                {
+                    lineRenderer.transform.LookAt(_camera.transform);
+                }
+                else
+                {
+                    lineRenderer.transform.LookAt(center + Vector3.up);
+                }
 
                 // Apply radius from message using scale
-                highlight.transform.localScale = highlightsMessage[i].r * Vector3.one;
+                lineRenderer.transform.localScale = highlightsMessage[i].r * Vector3.one;
             }
         }
     }

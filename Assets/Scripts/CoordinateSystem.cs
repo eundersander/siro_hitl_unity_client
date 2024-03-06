@@ -30,7 +30,7 @@ public static class CoordinateSystem
     /// <summary>
     /// Convert a Habitat vector into Unity's coordinate system.
     /// </summary>
-    public static Vector3 ToUnityVector(List<float> translation)
+    public static Vector3 ToUnityVector(IList<float> translation)
     {
         return new Vector3(
             translation[0],
@@ -43,7 +43,7 @@ public static class CoordinateSystem
     /// Convert a Habitat quaternion into Unity's coordinate system.
     /// Beware: the Unity asset pipeline bakes transforms into 3D models. Use ToUnityQuaternion3DModel() to rotate models.
     /// </summary>
-    public static Quaternion ToUnityQuaternion(List<float> rotation)
+    public static Quaternion ToUnityQuaternion(IList<float> rotation)
     {
         return new Quaternion(
             rotation[1],
@@ -57,7 +57,7 @@ public static class CoordinateSystem
     /// Convert a Habitat quaternion into Unity's coordinate system, taking into account 3D model baked transformations.
     /// 3D models are pre-processed to handle the change in handedness (avoids negative scaling on the z-axis).
     /// </summary>
-    public static Quaternion ToUnityQuaternion3DModel(List<float> rotation)
+    public static Quaternion ToUnityQuaternion3DModel(IList<float> rotation)
     {
         Quaternion newRot = new Quaternion(
             rotation[1],

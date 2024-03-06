@@ -11,8 +11,8 @@ public class AppConfig : ScriptableObject
     [Tooltip("Line segment count composing the highlight circles.\nThis value cannot be changed during runtime.")]
     public int highlightCircleResolution = 32;
 
-    [Tooltip("Vertex color of the highlight lines.")]
-    public Color highlightColor = Color.white;
+    [Tooltip("Default vertex color of the highlight lines.")]
+    public Color highlightDefaultColor = Color.white;
 
     [Tooltip("Materials used to shade the highlight circles.")]
     public Material[] highlightMaterials;
