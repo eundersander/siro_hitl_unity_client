@@ -17,14 +17,15 @@ public class GfxReplayPlayer : IUpdatable
         public float startTime;          // Time when this movement data was created or updated
     }
 
-    private Dictionary<int, GameObject> _instanceDictionary = new Dictionary<int, GameObject>();
-    private Dictionary<string, Load> _loadDictionary = new Dictionary<string, Load>();
-    IKeyframeMessageConsumer[] _messageConsumers;
-    private Dictionary<int, MovementData> _movementData = new Dictionary<int, MovementData>();
-    private float _keyframeInterval = 0.1f;  // assume 10Hz, but see also SetKeyframeRate
-    const bool _useKeyframeInterpolation = true;
-    Dictionary<int, GfxReplaySkinnedMesh> _skinnedMeshes = new Dictionary<int, GfxReplaySkinnedMesh>();
+    const bool USE_KEYFRAME_INTERPOLATION = true;
+
+    private Dictionary<int, HabitatInstance> _instanceDictionary = new();
+    private Dictionary<string, Load> _loadDictionary = new();
+    private Dictionary<int, MovementData> _movementData = new();
+    Dictionary<int, GfxReplaySkinnedMesh> _skinnedMeshes = new();
     CoroutineContainer _coroutines;
+    IKeyframeMessageConsumer[] _messageConsumers;
+    private float _keyframeInterval = 0.1f;  // assume 10Hz, but see also SetKeyframeRate
 
     public GfxReplayPlayer(IKeyframeMessageConsumer[] messageConsumers)
     {
@@ -65,32 +66,6 @@ public class GfxReplayPlayer : IUpdatable
         return SimplifyRelativePath(sourceFilepath).Replace(".glb", "");
     }
 
-    GameObject HandleFrame(GameObject node, Frame frame)
-    {
-        if (frame.up[0] == 0 && frame.up[1] == 1 && frame.up[2] == 0)
-        {
-            // optimization todo: if node.transform is identity, no need to add parent here
-            GameObject newRootNode = new GameObject(node.name + "_parent");
-            node.transform.parent = newRootNode.transform;
-            return newRootNode;
-        }
-        else if (frame.up[0] == 0 && frame.up[1] == 0 && frame.up[2] == 1)
-        {
-            // Rotate 90 degrees about x axis
-            node.transform.Rotate(-Vector3.right * 90, Space.Self);
-
-            GameObject newRootNode = new GameObject(node.name + "_parent");
-            node.transform.parent = newRootNode.transform;
-            return newRootNode;
-        }
-        else
-        {
-            Debug.LogError($"Unexpected value for frame.up: {frame.up[0]}, {frame.up[1]}, {frame.up[2]}");
-            return null;
-        }
-    }
-
-
     private void ProcessStateUpdatesImmediate(KeyframeData keyframe)
     {
         // Handle State Updates
@@ -100,13 +75,13 @@ public class GfxReplayPlayer : IUpdatable
             {
                 if (_instanceDictionary.ContainsKey(update.instanceKey))
                 {
-                    GameObject instance = _instanceDictionary[update.instanceKey];
+                    Transform instance = _instanceDictionary[update.instanceKey].transform;
 
                     Vector3 translation = CoordinateSystem.ToUnityVector(update.state.absTransform.translation);
-                    Quaternion rotation = CoordinateSystem.ToUnityQuaternion3DModel(update.state.absTransform.rotation);
+                    Quaternion rotation = CoordinateSystem.ToUnityQuaternion(update.state.absTransform.rotation);
 
-                    instance.transform.position = translation;
-                    instance.transform.rotation = rotation;
+                    instance.position = translation;
+                    instance.rotation = rotation;
                 }
             }
         }
@@ -120,10 +95,10 @@ public class GfxReplayPlayer : IUpdatable
             {
                 if (_instanceDictionary.ContainsKey(update.instanceKey))
                 {
-                    GameObject instance = _instanceDictionary[update.instanceKey];
+                    GameObject instance = _instanceDictionary[update.instanceKey].gameObject;
 
                     Vector3 newTranslation = CoordinateSystem.ToUnityVector(update.state.absTransform.translation);
-                    Quaternion newRotation = CoordinateSystem.ToUnityQuaternion3DModel(update.state.absTransform.rotation);
+                    Quaternion newRotation = CoordinateSystem.ToUnityQuaternion(update.state.absTransform.rotation);
 
                     // Check if the instance is at the origin
                     if (instance.transform.position == Vector3.zero)
@@ -166,7 +141,7 @@ public class GfxReplayPlayer : IUpdatable
 
     private void ProcessStateUpdates(KeyframeData keyframe)
     {
-        if (_useKeyframeInterpolation)
+        if (USE_KEYFRAME_INTERPOLATION)
         {
             ProcessStateUpdatesForInterpolation(keyframe);
         }
@@ -188,7 +163,7 @@ public class GfxReplayPlayer : IUpdatable
         foreach (var kvp in _instanceDictionary)
         {
             int instanceKey = kvp.Key;
-            GameObject instance = kvp.Value;
+            Transform instance = kvp.Value.transform;
 
             if (_movementData.ContainsKey(instanceKey))
             {
@@ -197,13 +172,13 @@ public class GfxReplayPlayer : IUpdatable
 
                 if (t < 1.0f)
                 {
-                    instance.transform.position = Vector3.Lerp(data.startPosition, data.endPosition, t);
-                    instance.transform.rotation = Quaternion.Slerp(data.startRotation, data.endRotation, t);
+                    instance.position = Vector3.Lerp(data.startPosition, data.endPosition, t);
+                    instance.rotation = Quaternion.Slerp(data.startRotation, data.endRotation, t);
                 }
                 else
                 {
-                    instance.transform.position = data.endPosition;
-                    instance.transform.rotation = data.endRotation;
+                    instance.position = data.endPosition;
+                    instance.rotation = data.endRotation;
 
                     // Mark this key for removal
                     keysToRemove.Add(instanceKey);
@@ -226,7 +201,7 @@ public class GfxReplayPlayer : IUpdatable
             messageConsumer.Update();
         }
 
-        if (_useKeyframeInterpolation)
+        if (USE_KEYFRAME_INTERPOLATION)
         {
             UpdateForInterpolatedStateUpdates();
         }
@@ -265,30 +240,20 @@ public class GfxReplayPlayer : IUpdatable
                 }
 
                 string resourcePath = getResourcePath(source);
-                GameObject prefab = Resources.Load<GameObject>(resourcePath);
-
-                if (prefab == null)
-                {
-                    Debug.LogError("Unable to load GameObject for " + resourcePath);
-                    continue;
-                }
-
-                GameObject instance = GameObject.Instantiate(prefab);
+                HabitatInstance instance = HabitatInstance.CreateAndLoad(creationItem.instanceKey.ToString(), resourcePath, load.frame);
 
                 if (creationItem.creation.scale != null)
                 {
-                    instance.transform.localScale = new Vector3(creationItem.creation.scale[0], creationItem.creation.scale[1], creationItem.creation.scale[2]);
+                    instance.transform.localScale = creationItem.creation.scale.ToVector3();
                 }
 
                 int rigId = creationItem.creation.rigId;
                 if (rigId != Constants.ID_UNDEFINED)
                 {
-                    var skinnedMesh = instance.AddComponent<GfxReplaySkinnedMesh>();
+                    var skinnedMesh = instance.gameObject.AddComponent<GfxReplaySkinnedMesh>();
                     skinnedMesh.rigId = rigId;
                     _skinnedMeshes[rigId] = skinnedMesh;
                 }
-
-                instance = HandleFrame(instance, load.frame);
 
                 _instanceDictionary[creationItem.instanceKey] = instance;
             }
@@ -326,7 +291,7 @@ public class GfxReplayPlayer : IUpdatable
         {
             foreach (var key in keyframe.deletions)
             {
-                if (_instanceDictionary.TryGetValue(key, out GameObject obj))
+                if (_instanceDictionary.TryGetValue(key, out HabitatInstance obj))
                 {
                     GfxReplaySkinnedMesh skinnedMesh = obj.GetComponent<GfxReplaySkinnedMesh>();
                     if (skinnedMesh != null)
@@ -335,7 +300,7 @@ public class GfxReplayPlayer : IUpdatable
                     }
                 }
                 
-                GameObject.Destroy(_instanceDictionary[key]);
+                GameObject.Destroy(_instanceDictionary[key].gameObject);
             }
             _coroutines.StartCoroutine(ReleaseUnusedMemory(
                 // Wait for memory clean-up to be finished before executing KeyframePostUpdate()
@@ -364,7 +329,7 @@ public class GfxReplayPlayer : IUpdatable
     {
         foreach (var kvp in _instanceDictionary)
         {
-            GameObject.Destroy(kvp.Value);
+            GameObject.Destroy(kvp.Value.gameObject);
         }
         _coroutines.StartCoroutine(ReleaseUnusedMemory());
         Debug.Log($"Deleted all {_instanceDictionary.Count} instances!");

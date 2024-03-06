@@ -35,7 +35,7 @@ public class PoseData
     public void FromGameObject(GameObject gameObject)
     {
         position = CoordinateSystem.ToHabitatVector(gameObject.transform.position).ToArray();
-        rotation = CoordinateSystem.ToHabitatQuaternion3DModel(gameObject.transform.rotation).ToArray();
+        rotation = CoordinateSystem.ToHabitatQuaternion(gameObject.transform.rotation).ToArray();
     }
 }
 
