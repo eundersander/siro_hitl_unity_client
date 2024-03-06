@@ -39,24 +39,11 @@ public class GfxReplayInstance : MonoBehaviour
         instance.transform.SetParent(offsetNode.transform, worldPositionStays: false);
     }
 
-    Quaternion ComputeFrameRotationOffset(Frame frame)
-    {
-        Quaternion unityFrameInv = Quaternion.Inverse(Quaternion.LookRotation(
-            Vector3.forward,
-            Vector3.up
-        ));
-        Quaternion habitatFrame = Quaternion.LookRotation(
-            frame.front.ToVector3(),
-            frame.up.ToVector3()
-        );
-        return unityFrameInv * habitatFrame;
-    }
-
     // TODO: Optimization: Skip the offset node. Instead, bake the transform into the instance root node.
     GameObject CreateOffsetNode(Frame frame)
     {
         GameObject offsetNode = new GameObject("Offset");
-        offsetNode.transform.localRotation = ComputeFrameRotationOffset(frame);
+        offsetNode.transform.localRotation = CoordinateSystem.ComputeFrameRotationOffset(frame);
         return offsetNode;
     }
 }

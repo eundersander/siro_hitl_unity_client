@@ -68,5 +68,35 @@ namespace Habitat.Tests.EditMode
             Assert.AreEqual(CoordinateSystem.ToUnityQuaternion(CoordinateSystem.ToHabitatQuaternion(quat(0, 1, 0, w:1))), quat(0, 1, 0, w:1));
             Assert.AreEqual(CoordinateSystem.ToUnityQuaternion(CoordinateSystem.ToHabitatQuaternion(quat(0, 0, 1, w:1))), quat(0, 0, 1, w:1));
         }
+
+        [Test]
+        public void TestComputeFrameRotationOffset()
+        {
+            // Rotate unit vectors with `CoordinateSystem.ComputeFrameRotationOffset` and check that they align with frame.
+            {
+                Frame frame = new Frame
+                {
+                    up = vec_arr(0, 1, 0),
+                    front = vec_arr(0, 0, 1)
+                };
+                Quaternion rotationOffset = CoordinateSystem.ComputeFrameRotationOffset(frame);
+                var unityUp = rotationOffset * Vector3.up;
+                var unityFront = rotationOffset * Vector3.forward;
+                Assert.AreEqual(unityFront.ToArray(), frame.front);
+                Assert.AreEqual(unityUp.ToArray(), frame.up);
+            }
+            {
+                Frame frame = new Frame
+                {
+                    up = vec_arr(-1, 0, 0),
+                    front = vec_arr(0, -1, 0)
+                };
+                Quaternion rotationOffset = CoordinateSystem.ComputeFrameRotationOffset(frame);
+                var unityUp = rotationOffset * Vector3.up;
+                var unityFront = rotationOffset * Vector3.forward;
+                Assert.AreEqual(unityFront.ToArray(), frame.front);
+                Assert.AreEqual(unityUp.ToArray(), frame.up);
+            }
+        }
     }
 }

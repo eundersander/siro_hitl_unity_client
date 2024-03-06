@@ -73,6 +73,22 @@ public static class CoordinateSystem
             -rotation.z
         };
     }
+
+    /// <summary>
+    /// Create a Unity quaternion from a gfx-replay 'Frame' object.
+    /// </summary>
+    public static Quaternion ComputeFrameRotationOffset(Frame frame)
+    {
+        Quaternion unityFrameQuatInv = Quaternion.Inverse(Quaternion.LookRotation(
+            Vector3.forward,
+            Vector3.up
+        ));
+        Quaternion habitatFrameQuat = Quaternion.LookRotation(
+            frame.front.ToVector3(),
+            frame.up.ToVector3()
+        );
+        return unityFrameQuatInv * habitatFrameQuat;
+    }
 }
 
 public static class Extensions
@@ -87,5 +103,10 @@ public static class Extensions
     {
         Assert.IsTrue(q?.Count == 4);
         return new Quaternion(q[0], q[1], q[2], q[3]);
+    }
+
+    public static float[] ToArray(this Vector3 v)
+    {
+        return new float[]{v.x, v.y, v.z};
     }
 }
