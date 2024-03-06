@@ -27,6 +27,7 @@ public class AppMouseKeyboard : MonoBehaviour
     [SerializeField] private GameObject _offlineIcon;
 
     // IKeyframeMessageConsumers
+    ServerKeyframeIdHandler _serverKeyframeIdHandler;
     HighlightManager _highlightManager;
     LoadingEffectHandler _loadingEffectHandler;
     CameraTransformHandler _cameraTransformHandler;
@@ -45,11 +46,13 @@ public class AppMouseKeyboard : MonoBehaviour
     protected void Awake()
     {
         // Initialize IKeyframeMessageConsumers.
+        _serverKeyframeIdHandler = new ServerKeyframeIdHandler();
         _highlightManager = new HighlightManager(_appConfig, _camera);
         _loadingEffectHandler = new LoadingEffectHandler();
         _cameraTransformHandler = new CameraTransformHandler(_camera);
         var keyframeMessageConsumers = new IKeyframeMessageConsumer[]
         {
+            _serverKeyframeIdHandler,
             _highlightManager,
             _loadingEffectHandler,
             _cameraTransformHandler,
@@ -67,7 +70,7 @@ public class AppMouseKeyboard : MonoBehaviour
         // Initialize application state.
         _configLoader = new ConfigLoader(_defaultServerLocations);
         _gfxReplayPlayer = new GfxReplayPlayer(keyframeMessageConsumers);
-        _networkClient = new NetworkClient(_gfxReplayPlayer, _configLoader, clientStateProducers);
+        _networkClient = new NetworkClient(_gfxReplayPlayer, _configLoader, clientStateProducers, _serverKeyframeIdHandler);
         _onlineStatusDisplayHandler = new OnlineStatusDisplayHandler(_offlineIcon, _camera);
         _replayFileLoader = new ReplayFileLoader(_gfxReplayPlayer, _testKeyframe);
     }

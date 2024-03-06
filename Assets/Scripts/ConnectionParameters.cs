@@ -65,25 +65,69 @@ public static class ConnectionParameters
     }
 
     /// <summary>
-    /// Get a valid server port from query parameters.
+    /// Try to parse a port string.
+    /// Checks if the port can be parsed into an integer between 0 and 65535 inclusively.
+    /// </summary>
+    /// <param name="portString">String to parse.</param>
+    /// <param name="result">Output port.</param>
+    /// <returns>True if the string could be parsed.</returns>
+    public static bool TryParsePortString(string portString, out int result)
+    {
+        result = 0;
+        if (int.TryParse(portString, out int port) &&
+            port >= 0 &&
+            port <= 65535)
+        {
+            result = port;
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Get a valid server port range from query parameters.
+    /// The 'server_port_range' parameter defines two ports, e.g. "server_port_range=2222-3333".
+    /// The 'server_port' defines a single port, e.g. "server_port=2222".
+    /// If both parameters are defined, 'server_port_range' has priority over 'server_port'.
     /// </summary>
     /// <param name="queryParams">See GetConnectionParameters().</param>
-    /// <returns>Port int. Returns null if the input does not contain a valid port.</returns>
-    public static int? GetServerPort(Dictionary<string, string> queryParams)
+    /// <returns>Port range. Always in increasing order. Returns null if the input does not contain a valid port.</returns>
+    public static (int startPort, int endPort)? GetServerPortRange(Dictionary<string, string> queryParams)
     {
         if (queryParams == null) return null;
 
-        if (queryParams.TryGetValue("server_port", out string serverPortString))
+        // Parse "server_port_range".
+        if (queryParams.TryGetValue("server_port_range", out string serverPortRangeString))
         {
-            if (int.TryParse(serverPortString, out int port) &&
-                port >= 0 &&
-                port <= 65535)
+            string[] parts = serverPortRangeString.Split('-');
+            if (parts.Length == 2 &&
+                TryParsePortString(parts[0], out int startPort) &&
+                TryParsePortString(parts[1], out int endPort))
             {
-                return port;
+                if (startPort <= endPort)
+                {
+                    return (startPort, endPort);
+                }
+                else
+                {
+                    return (endPort, startPort);
+                }
             }
             else
             {
-                Debug.LogError($"Invalid server_port: '{serverPortString}'");
+                Debug.LogError($"Invalid server_port_range: '{serverPortRangeString}'. Expected format: 'server_port_range=2222-3333'.");
+            }
+        }
+        // Parse "server_port".
+        else if (queryParams.TryGetValue("server_port", out string serverPortString))
+        {
+            if (TryParsePortString(serverPortString, out int port))
+            {
+                return (port, port);
+            }
+            else
+            {
+                Debug.LogError($"Invalid server_port: '{serverPortString}'. Expected format: 'server_port=2222'.");
             }
         }
 

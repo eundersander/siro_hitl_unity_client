@@ -49,6 +49,7 @@ public class AppVR : MonoBehaviour
     
 
     // IKeyframeMessageConsumers
+    ServerKeyframeIdHandler _serverKeyframeIdHandler;
     AvatarPositionHandler _avatarPositionHandler;
     HighlightManager _highlightManager;
     LoadingEffectHandler _loadingEffectHandler;
@@ -75,6 +76,7 @@ public class AppVR : MonoBehaviour
         _collisionFloor = new CollisionFloor();
 
         // Initialize IKeyframeMessageConsumers.
+        _serverKeyframeIdHandler = new ServerKeyframeIdHandler();
         _avatarPositionHandler = new AvatarPositionHandler(_camera.gameObject, _xrOrigin);
         _highlightManager = new HighlightManager(_appConfig, _camera);
         _loadingEffectHandler = new LoadingEffectHandler();
@@ -82,6 +84,7 @@ public class AppVR : MonoBehaviour
         _navmeshHelper = new NavmeshHelper();
         var keyframeMessageConsumers = new IKeyframeMessageConsumer[]
         {
+            _serverKeyframeIdHandler,
             _avatarPositionHandler,
             _highlightManager,
             _loadingEffectHandler,
@@ -101,7 +104,7 @@ public class AppVR : MonoBehaviour
         // Initialize application state.
         _configLoader = new ConfigLoader(_defaultServerLocations);
         _gfxReplayPlayer = new GfxReplayPlayer(keyframeMessageConsumers);
-        _networkClient = new NetworkClient(_gfxReplayPlayer, _configLoader, clientStateProducers);
+        _networkClient = new NetworkClient(_gfxReplayPlayer, _configLoader, clientStateProducers, _serverKeyframeIdHandler);
         _onlineStatusDisplayHandler = new OnlineStatusDisplayHandler(_offlineIcon, _camera);
         _replayFileLoader = new ReplayFileLoader(_gfxReplayPlayer, _testKeyframe);
     }

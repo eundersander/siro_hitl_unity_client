@@ -10,6 +10,7 @@ public class ClientState
     public ButtonInputData input;
     public MouseInputData mouse;
     public Dictionary<string, string> connection_params_dict;
+    public int? recentServerKeyframeId = null;
 }
 
 [Serializable]

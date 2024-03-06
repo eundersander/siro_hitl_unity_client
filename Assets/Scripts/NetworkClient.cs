@@ -6,8 +6,25 @@ using Newtonsoft.Json;
 using UnityEngine.Assertions;
 using System.Collections;
 using System.Threading.Tasks;
-
 using System.Web;
+
+/// <summary>
+/// MonoBehaviour that renders on-screen text for NetworkClient.
+/// </summary>
+public class NetworkClientGUI : MonoBehaviour
+{
+    public string TextMessage { get; set; } = "";
+
+    public void OnGUI()
+    {
+        GUILayout.BeginArea(new Rect(16, 16, 200, 200));
+        GUILayout.BeginVertical();
+        GUI.color = Color.white;
+        GUILayout.Label(TextMessage);
+        GUILayout.EndVertical();
+        GUILayout.EndArea();
+    }
+}
 
 public class NetworkClient : IUpdatable
 {
@@ -35,15 +52,19 @@ public class NetworkClient : IUpdatable
     private int currentServerIndex = 0;
     private int messagesReceivedCount = 0;
     private int frameCount = 0;
+    private float _delayReconnect = 0.0f;
+    private string _disconnectReason = "";
+    int _recentConnectionMessageCount = 0;
 
     private GfxReplayPlayer _player;
     private ConfigLoader _configLoader;
 
     Dictionary<string, string> _connectionParams;
-
     ClientState _clientState = new ClientState();
     IClientStateProducer[] _clientStateProducers;
     CoroutineContainer _coroutines;
+    NetworkClientGUI _textRenderer;
+    ServerKeyframeIdHandler _serverKeyframeIdHandler;
 
     // Used to handle data that is only meant to be sent during the first transmission.
     private bool _firstTransmission = true;
@@ -57,42 +78,48 @@ public class NetworkClient : IUpdatable
         MissingMemberHandling = MissingMemberHandling.Ignore
     };
 
-    public NetworkClient(GfxReplayPlayer player, ConfigLoader configLoader, IClientStateProducer[] clientStateProducers)
+    public NetworkClient(GfxReplayPlayer player, ConfigLoader configLoader, IClientStateProducer[] clientStateProducers, ServerKeyframeIdHandler serverKeyframeIdHandler)
     {
         _player = player;
         _configLoader = configLoader;
         _clientStateProducers = clientStateProducers;
+        _serverKeyframeIdHandler = serverKeyframeIdHandler;
         _coroutines = CoroutineContainer.Create("NetworkClient");
+        _textRenderer = new GameObject("NetworkClientGUI").AddComponent<NetworkClientGUI>();
         
         // Read URL query parameters
         _connectionParams = ConnectionParameters.GetConnectionParameters(Application.absoluteURL);
-        var _serverHostnameOverride = ConnectionParameters.GetServerHostname(_connectionParams);
-        var _serverPortOverride = ConnectionParameters.GetServerPort(_connectionParams);
+        var serverHostnameOverride = ConnectionParameters.GetServerHostname(_connectionParams);
+        var serverPortRange = ConnectionParameters.GetServerPortRange(_connectionParams);
 
+        if (serverPortRange == null)
+        {
+            serverPortRange = (defaultServerPort, defaultServerPort);
+        }
+
+        bool isHttps = false;
+        string wsProtocol = isHttps ? "wss" : "ws";
         // Set up server hostnames and port.
-        string[] serverLocations = _serverHostnameOverride != null ? 
-                                        new[]{_serverHostnameOverride} : 
+        string[] serverLocations = serverHostnameOverride != null ? 
+                                        new[]{serverHostnameOverride} : 
                                         _configLoader.AppConfig.serverLocations;
-        int serverPort = _serverPortOverride != null ?
-                            _serverPortOverride.Value :
-                            defaultServerPort;
         Assert.IsTrue(serverLocations.Length > 0);
         foreach (string location in serverLocations)
         {
-            string adjustedLocation;
             if (!location.Contains(":"))
             {
-                adjustedLocation = $"{location}:{serverPort}";
+                for (int port = serverPortRange.Value.startPort; port <= serverPortRange.Value.endPort; port++)
+                {
+                    string adjustedLocation = location + ":" + port;
+                    _serverURLs.Add($"{wsProtocol}://{adjustedLocation}");
+                }
             }
             else
             {
-                adjustedLocation = location;
+                _serverURLs.Add($"{wsProtocol}://{location}");
             }
-
-            bool isHttps = false;
-            string wsProtocol = isHttps ? "wss" : "ws";
-            _serverURLs.Add($"{wsProtocol}://{adjustedLocation}");
         }
+        currentServerIndex = UnityEngine.Random.Range(0, _serverURLs.Count);
 
         // Start networking.
         _coroutines.StartCoroutine(TryConnectToServers());
@@ -122,6 +149,22 @@ public class NetworkClient : IUpdatable
         {
             if (mainWebSocket == null)
             {
+                if (_delayReconnect > 0.0f)
+                {
+                    Debug.Log($"Delaying reconnect for {_delayReconnect}s");
+                    int numWaits = (int)_delayReconnect;
+                    for (int i = 0; i < numWaits; i++)
+                    {
+                        int remainingTime = numWaits - i;
+                        string retryDesc = _serverURLs.Count == 1 ? "Retrying" : "Trying another server";
+                        SetDisconnectStatus($"{_disconnectReason}\n{retryDesc} in {remainingTime}s...");
+                        yield return new WaitForSeconds(1.0f);
+                    }
+                    SetDisconnectStatus("");
+                    _delayReconnect = 0.0f;
+                    _disconnectReason = "";
+                }
+
                 currentServerIndex++;
                 if (currentServerIndex >= _serverURLs.Count)
                 {
@@ -137,11 +180,12 @@ public class NetworkClient : IUpdatable
                 // still on the main Unity thread).
                 var connectTask = ConnectWebSocket(websocket, url, doAbort);
 
-                // Wait for 4s, then check the result
-                yield return new WaitForSeconds(4);
+                // Wait for 2s, then check the result
+                yield return new WaitForSeconds(2.0f);
 
                 if (mainWebSocket == null && websocket.State == WebSocketState.Connecting)
                 {
+                    SetDisconnectStatus("Trying to reach server...");
                     // Wait another 4s
                     yield return new WaitForSeconds(4);
                 }
@@ -155,6 +199,14 @@ public class NetworkClient : IUpdatable
                     // See OnOpen callback in ConnectWebSocket where we check
                     // this flag and potentially discard the connection.
                     doAbort.SetFlag();
+
+                    if (_disconnectReason == "")
+                    {
+                        // If there's only one server URL, let's wait 5s (avoid hammering more often than that).
+                        // If there's multiple server URLs, let's try them more quickly (wait only 2s).
+                        _delayReconnect = _serverURLs.Count == 1 ? 5.0f : 2.0f;
+                        _disconnectReason = "Unable to reach server!";
+                    }
                 }
             }
             else
@@ -178,12 +230,16 @@ public class NetworkClient : IUpdatable
             }
 
             Debug.Log("Connected to: " + url);
+            _recentConnectionMessageCount = 0;
 
-            websocket.SendText("client ready!");
+            // Reset the server keyframe ID to avoid leaking ID from a previous session
+            _serverKeyframeIdHandler.Reset();
+
+            // send connection params
+            _connectionParams["isClientReady"] = "1";
+            string jsonStr = JsonConvert.SerializeObject(_connectionParams, Formatting.None, _jsonSettings);
+            websocket.SendText(jsonStr);
             Debug.Log("Sent message: client ready!");
-
-            // delete all old instances on (re)connect
-            _player.DeleteAllInstancesFromKeyframes();
 
             mainWebSocket = websocket;
         };
@@ -199,14 +255,35 @@ public class NetworkClient : IUpdatable
             {
                 Debug.Log("Main connection closed!");
                 mainWebSocket = null;
+                SetDisconnectStatus("");
+                const int messageThreshold = 10;
+                // delay reconnect after close, to avoid spamming servers and to give other clients a chance to connect
+                if (_recentConnectionMessageCount >= messageThreshold)
+                {
+                    // This was a long-lasting connection. Disconnected most likely due to client idle.
+                    _disconnectReason = "Disconnected!";
+                    _delayReconnect = 15.0f;
+                }
+                else
+                {
+                    // This was a short connection. Disconnected most likely due to server already having a client.
+                    _disconnectReason = "Server is busy!";
+                    _delayReconnect = _serverURLs.Count == 1 ? 10.0f : 3.0f;
+                }
             }
         };
 
         websocket.OnMessage += (bytes) =>
         {
+            if (_recentConnectionMessageCount == 0) {
+                // Delete all old instances upon receiving the first keyframe.
+                _player.DeleteAllInstancesFromKeyframes();
+            }
+
             string message = System.Text.Encoding.UTF8.GetString(bytes);
             ProcessReceivedKeyframes(message);
             messagesReceivedCount++;
+            _recentConnectionMessageCount++;
         };
 
         await websocket.Connect();
@@ -229,13 +306,15 @@ public class NetworkClient : IUpdatable
 
             if (isConnected())
             {
-                // Log the count of received messages
-                float messageRate = (float)messagesReceivedCount / duration;
-
-                Debug.Log($"Message rate: {messageRate.ToString("F1")}, FPS: {fps.ToString("F1")}");
-
-                _player.SetKeyframeRate(messageRate);
-            } else
+                if (messagesReceivedCount > 0 && duration > 0)
+                {
+                    // Log the count of received messages
+                    float messageRate = (float)messagesReceivedCount / duration;
+                    Debug.Log($"Message rate: {messageRate.ToString("F1")}, FPS: {fps.ToString("F1")}");
+                    _player.SetKeyframeRate(messageRate);
+                }
+            }
+            else
             {
                 Debug.Log($"disconnected, FPS: {fps.ToString("F1")}");
             }
@@ -266,6 +345,16 @@ public class NetworkClient : IUpdatable
         {
             updater.UpdateClientState(ref _clientState);
         }
+        
+        if (_serverKeyframeIdHandler.recentServerKeyframeId != null)
+        {
+            _clientState.recentServerKeyframeId = _serverKeyframeIdHandler.recentServerKeyframeId;
+        }
+    }
+
+    void SetDisconnectStatus(string status)
+    {
+        _textRenderer.TextMessage = status;
     }
 
     IEnumerator SendClientState()

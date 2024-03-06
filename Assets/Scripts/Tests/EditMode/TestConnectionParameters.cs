@@ -142,36 +142,89 @@ namespace Habitat.Tests.EditMode
         }
 
         [Test]
-        public void TestGetServerPort()
+        public void TestTryParsePortString()
         {
-            string url;
-            int? port;
-            Dictionary<string, string> parameters;
+            int port;
+            bool result;
 
             // Valid cases.
             LogAssert.ignoreFailingMessages = false;
 
             // Canonical case.
-            url = "test?server_hostname=HOST&server_port=1111&test=true";
-            parameters = ConnectionParameters.GetConnectionParameters(url);
-            port = ConnectionParameters.GetServerPort(parameters);
+            result = ConnectionParameters.TryParsePortString("1111", out port);
+            Assert.AreEqual(result, true);
             Assert.AreEqual(port, 1111);
+
+            // Null string.
+            result = ConnectionParameters.TryParsePortString(null, out port);
+            Assert.AreEqual(result, false);
+
+            // Empty string.
+            result = ConnectionParameters.TryParsePortString("", out port);
+            Assert.AreEqual(result, false);
+
+            // Negative port.
+            result = ConnectionParameters.TryParsePortString("-55", out port);
+            Assert.AreEqual(result, false);
+
+            // Port > 65535.
+            result = ConnectionParameters.TryParsePortString("100000", out port);
+            Assert.AreEqual(result, false);
+        }
+
+        [Test]
+        public void TestGetServerPortRange()
+        {
+            string url;
+            (int portStart, int portEnd)? portRange;
+            Dictionary<string, string> parameters;
+
+            // Valid cases.
+            LogAssert.ignoreFailingMessages = false;
+
+            // Canonical server_port.
+            url = "test?server_hostname=HOST&server_port=2222&test=true";
+            parameters = ConnectionParameters.GetConnectionParameters(url);
+            portRange = ConnectionParameters.GetServerPortRange(parameters);
+            Assert.AreEqual(portRange.Value.portStart, 2222);
+            Assert.AreEqual(portRange.Value.portEnd, 2222);
+
+            // Canonical server_port_range.
+            url = "test?server_hostname=HOST&server_port_range=2222-3333&test=true";
+            parameters = ConnectionParameters.GetConnectionParameters(url);
+            portRange = ConnectionParameters.GetServerPortRange(parameters);
+            Assert.AreEqual(portRange.Value.portStart, 2222);
+            Assert.AreEqual(portRange.Value.portEnd, 3333);
+
+            // Both server_port and server_port_range. 'server_port_range' has priority.
+            url = "test?server_port_range=2222-3333&server_port=4444";
+            parameters = ConnectionParameters.GetConnectionParameters(url);
+            portRange = ConnectionParameters.GetServerPortRange(parameters);
+            Assert.AreEqual(portRange.Value.portStart, 2222);
+            Assert.AreEqual(portRange.Value.portEnd, 3333);
+
+            // Decreasing port range. Output is expected to be in increasing order.
+            url = "test?server_port_range=3333-2222";
+            parameters = ConnectionParameters.GetConnectionParameters(url);
+            portRange = ConnectionParameters.GetServerPortRange(parameters);
+            Assert.AreEqual(portRange.Value.portStart, 2222);
+            Assert.AreEqual(portRange.Value.portEnd, 3333);
 
             // No port.
             url = "test?test=test";
             parameters = ConnectionParameters.GetConnectionParameters(url);
-            port = ConnectionParameters.GetServerPort(parameters);
-            Assert.AreEqual(port, null);
+            portRange = ConnectionParameters.GetServerPortRange(parameters);
+            Assert.AreEqual(portRange, null);
 
             // No parameter.
             url = "test";
             parameters = ConnectionParameters.GetConnectionParameters(url);
-            port = ConnectionParameters.GetServerPort(parameters);
-            Assert.AreEqual(port, null);
+            portRange = ConnectionParameters.GetServerPortRange(parameters);
+            Assert.AreEqual(portRange, null);
 
             // Null input
-            port = ConnectionParameters.GetServerPort(null);
-            Assert.AreEqual(port, null);
+            portRange = ConnectionParameters.GetServerPortRange(null);
+            Assert.AreEqual(portRange, null);
 
             // Invalid cases.
             LogAssert.ignoreFailingMessages = true;
@@ -179,20 +232,38 @@ namespace Habitat.Tests.EditMode
             // Invalid port.
             url = "test?server_port=test";
             parameters = ConnectionParameters.GetConnectionParameters(url);
-            port = ConnectionParameters.GetServerPort(parameters);
-            Assert.AreEqual(port, null);
+            portRange = ConnectionParameters.GetServerPortRange(parameters);
+            Assert.AreEqual(portRange, null);
+
+            // Invalid port range.
+            url = "test?server_port_range=test";
+            parameters = ConnectionParameters.GetConnectionParameters(url);
+            portRange = ConnectionParameters.GetServerPortRange(parameters);
+            Assert.AreEqual(portRange, null);
+
+            // '-' port range.
+            url = "test?server_port_range=-";
+            parameters = ConnectionParameters.GetConnectionParameters(url);
+            portRange = ConnectionParameters.GetServerPortRange(parameters);
+            Assert.AreEqual(portRange, null);
+            
+            // Invalid port range portion.
+            url = "test?server_port_range=test-test2";
+            parameters = ConnectionParameters.GetConnectionParameters(url);
+            portRange = ConnectionParameters.GetServerPortRange(parameters);
+            Assert.AreEqual(portRange, null);
 
             // Negative port.
             url = "test?server_port=-100";
             parameters = ConnectionParameters.GetConnectionParameters(url);
-            port = ConnectionParameters.GetServerPort(parameters);
-            Assert.AreEqual(port, null);
+            portRange = ConnectionParameters.GetServerPortRange(parameters);
+            Assert.AreEqual(portRange, null);
 
             // Port > 65535.
             url = "test?server_port=1000000";
             parameters = ConnectionParameters.GetConnectionParameters(url);
-            port = ConnectionParameters.GetServerPort(parameters);
-            Assert.AreEqual(port, null);
+            portRange = ConnectionParameters.GetServerPortRange(parameters);
+            Assert.AreEqual(portRange, null);
 
             LogAssert.ignoreFailingMessages = false;
         }
