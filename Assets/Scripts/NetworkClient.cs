@@ -152,8 +152,7 @@ public class NetworkClient : MonoBehaviour
         }
         currentServerIndex = UnityEngine.Random.Range(0, _serverURLs.Count);
 
-
-    StartCoroutine(TryConnectToServers());
+        StartCoroutine(TryConnectToServers());
 
         StartCoroutine(LogMessageRate());
 
