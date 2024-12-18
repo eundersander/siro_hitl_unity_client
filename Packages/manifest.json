@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "com.endel.nativewebsocket": "https://github.com/endel/NativeWebSocket.git#upm",
+    "com.meta.xr.sdk.interaction.ovr": "71.0.0",
     "com.siccity.gltfutility": "https://github.com/siccity/gltfutility.git",
     "com.unity.feature.vr": "1.0.0",
     "com.unity.ide.visualstudio": "2.0.21",
