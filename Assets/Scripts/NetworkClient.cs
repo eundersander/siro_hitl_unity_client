@@ -156,8 +156,8 @@ public class NetworkClient : MonoBehaviour
 
         StartCoroutine(LogMessageRate());
 
-        // Keep sending messages at every 0.1s
-        InvokeRepeating("SendClientState", 0.0f, 0.1f);
+        // Keep sending messages at a certain rate; a higher rate lowers perceived input latency but may overflow network capacity, leading to much worse latency!
+        InvokeRepeating("SendClientState", 0.0f, 1.0f / 30.0f);
     }
 
     void Update()
