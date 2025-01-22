@@ -21,13 +21,13 @@ public class InputTrackerXRPose : InputTracker
         _inputData.hands[0].FromGameObject(xrLeftControllerObject);
         _inputData.hands[1].FromGameObject(xrRightControllerObject);
 
-        //if(_leftHandBoneObjects == null)
-        //{
-        //    _leftHandBoneObjects = ConstructFlatBoneObjectList(leftHandRigRoot).ToArray();
-        //    _rightHandBoneObjects = ConstructFlatBoneObjectList(rightHandRigRoot).ToArray();
-        //}
-        // _inputData.articulatedHands[0].FromGameObjectList(_leftHandBoneObjects);
-        // _inputData.articulatedHands[1].FromGameObjectList(_rightHandBoneObjects);
+        if (_leftHandBoneObjects == null)
+        {
+            _leftHandBoneObjects = ConstructFlatBoneObjectList(leftHandRigRoot).ToArray();
+            _rightHandBoneObjects = ConstructFlatBoneObjectList(rightHandRigRoot).ToArray();
+        }
+        _inputData.articulatedHands[0].FromGameObjectList(_leftHandBoneObjects);
+        _inputData.articulatedHands[1].FromGameObjectList(_rightHandBoneObjects);
 
         state.avatar = _inputData;
     }

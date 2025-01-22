@@ -61,7 +61,7 @@ public class GfxReplayPlayer : MonoBehaviour
 
     static string getResourcePath(string sourceFilepath)
     {
-        return SimplifyRelativePath(sourceFilepath).Replace(".glb", "");
+        return SimplifyRelativePath(sourceFilepath).Replace(".glb", "").Replace(".obj", "");
     }
 
     GameObject HandleFrame(GameObject node, Frame frame)

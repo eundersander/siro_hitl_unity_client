@@ -123,6 +123,11 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!4 &121189884 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7715439802841928401, guid: f4f1f0ff232ea644c8a980e61825dd44, type: 3}
+  m_PrefabInstance: {fileID: 2080223632}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &316726562
 GameObject:
   m_ObjectHideFlags: 0
@@ -155,6 +160,11 @@ Transform:
   - {fileID: 1555611044}
   m_Father: {fileID: 2102118679}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &433057254 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8105417998198620699, guid: deccf1bd75222ab419fef0130b2a4d9e, type: 3}
+  m_PrefabInstance: {fileID: 732838873}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &455000942 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 459718, guid: 126d619cf4daa52469682f85c1378b4a, type: 3}
@@ -275,6 +285,8 @@ MonoBehaviour:
   xrHeadObject: {fileID: 1316663861}
   xrLeftControllerObject: {fileID: 1447167148}
   xrRightControllerObject: {fileID: 1785299683}
+  leftHandRigRoot: {fileID: 433057254}
+  rightHandRigRoot: {fileID: 121189884}
 --- !u!114 &695650939
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -329,8 +341,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8dc206cd601dc6f70b3d0f2a7d129d4a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  xrCameraNode: {fileID: 1708247983}
-  xrOriginNode: {fileID: 2109134565}
+  xrCameraNode: {fileID: 1316663861}
+  xrOriginNode: {fileID: 855797904}
 --- !u!114 &695650943
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -432,6 +444,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: deccf1bd75222ab419fef0130b2a4d9e, type: 3}
+--- !u!1 &855797904 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 100004, guid: 126d619cf4daa52469682f85c1378b4a, type: 3}
+  m_PrefabInstance: {fileID: 1373474677}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &878938825
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1070,11 +1087,6 @@ PrefabInstance:
 Transform:
   m_CorrespondingSourceObject: {fileID: 487254, guid: 126d619cf4daa52469682f85c1378b4a, type: 3}
   m_PrefabInstance: {fileID: 1373474677}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &2109134565 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 9014170783728641055, guid: 895f6f3c2d334633b5800312285058d2, type: 3}
-  m_PrefabInstance: {fileID: 878938825}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &2129145623 stripped
 GameObject:
